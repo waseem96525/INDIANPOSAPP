@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indian POS - Billing & Inventory</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Auth Container -->
+    <div id="auth-container" style="display: block;">
+        <!-- Login Form -->
+        <div id="login-form" class="auth-form active">
+            <h2>Login to POS System</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="login-username">Email:</label>
+                    <input type="email" id="login-username" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password:</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <button type="submit" id="login-btn">Login</button>
+                <div class="auth-links">
+                    <a href="#" id="show-signup">Create New Account</a>
+                </div>
+                <div class="dev-notice" style="margin-top: 1rem; padding: 0.5rem; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; font-size: 0.8rem; color: #155724;">
+                    <strong>✅ Development Mode Active:</strong> Using local authentication for testing. All features work normally.
+                    <br><small>To use Firebase production mode, change <code>developmentMode = false</code> in script.js</small>
+                </div>
+            </form>
+        </div>
+
+        <!-- Sign Up Form -->
+        <div id="signup-form" class="auth-form">
+            <h2>Create New Account</h2>
+            <form id="signupForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="signup-firstname">First Name:</label>
+                        <input type="text" id="signup-firstname" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-lastname">Last Name:</label>
+                        <input type="text" id="signup-lastname" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="signup-username">Username:</label>
+                    <input type="text" id="signup-username" required minlength="3">
+                </div>
+                <div class="form-group">
+                    <label for="signup-email">Email:</label>
+                    <input type="email" id="signup-email" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="signup-password">Password:</label>
+                        <input type="password" id="signup-password" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-confirm-password">Confirm Password:</label>
+                        <input type="password" id="signup-confirm-password" required minlength="6">
+                    </div>
+                </div>
+                <button type="submit" id="signup-btn">Create Account</button>
+                <div class="auth-links">
+                    <a href="#" id="show-login">Back to Login</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="app" style="display: none;">
+    <header>
+        <h1>Indian POS System</h1>
+        <nav>
+            <button id="nav-dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</button>
+            <button id="nav-inventory"><i class="fas fa-box"></i> Inventory</button>
+            <button id="nav-billing"><i class="fas fa-cash-register"></i> Billing</button>
+            <button id="nav-reports"><i class="fas fa-chart-bar"></i> Reports</button>
+            <button id="nav-settings"><i class="fas fa-cog"></i> Settings</button>
+        </nav>
+    </header>
+    <main>
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal" style="display: none;">
+            <div class="modal-content large-modal">
+                <span class="close-modal">&times;</span>
+                <h2>Settings</h2>
+
+                <!-- Settings Tabs -->
+                <div class="settings-tabs">
+                    <button class="tab-btn active" data-tab="account">Account</button>
+                    <button class="tab-btn" data-tab="shop">Shop Details</button>
+                    <button class="tab-btn" data-tab="system">System</button>
+                </div>
+
+                <!-- Account Tab -->
+                <div id="account-tab" class="settings-tab active">
+                    <h3>Change Password</h3>
+                    <form id="change-password-form">
+                        <div class="form-group">
+                            <label for="current-password">Current Password:</label>
+                            <input type="password" id="current-password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-password">New Password:</label>
+                            <input type="password" id="new-password" required minlength="6">
+                        </div>
+                        <div class="form-group">
+                            <label for="confirm-password">Confirm New Password:</label>
+                            <input type="password" id="confirm-password" required minlength="6">
+                        </div>
+                        <button type="submit" class="btn-primary">Change Password</button>
+                    </form>
+                </div>
+
+                <!-- Shop Details Tab -->
+                <div id="shop-tab" class="settings-tab">
+                    <h3>Shop Information</h3>
+                    <form id="shop-details-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="shop-name">Shop Name:</label>
+                                <input type="text" id="shop-name" placeholder="Enter shop name">
+                            </div>
+                            <div class="form-group">
+                                <label for="shop-phone">Phone Number:</label>
+                                <input type="tel" id="shop-phone" placeholder="Enter phone number">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="shop-address">Address:</label>
+                            <textarea id="shop-address" placeholder="Enter shop address" rows="3"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="shop-email">Email:</label>
+                                <input type="email" id="shop-email" placeholder="Enter email address">
+                            </div>
+                            <div class="form-group">
+                                <label for="shop-gst">GST Number:</label>
+                                <input type="text" id="shop-gst" placeholder="Enter GST number">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="shop-logo">Logo URL:</label>
+                            <input type="url" id="shop-logo" placeholder="Enter logo image URL">
+                        </div>
+                        <button type="submit" class="btn-primary">Save Shop Details</button>
+                    </form>
+                </div>
+
+                <!-- System Tab -->
+                <div id="system-tab" class="settings-tab">
+                    <h3>System Preferences</h3>
+                    <form id="system-settings-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="currency">Currency Symbol:</label>
+                                <select id="currency">
+                                    <option value="₹">₹ (INR)</option>
+                                    <option value="$">$ (USD)</option>
+                                    <option value="€">€ (EUR)</option>
+                                    <option value="£">£ (GBP)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="default-gst">Default GST Rate (%):</label>
+                                <input type="number" id="default-gst" min="0" max="100" step="0.01" placeholder="18.00">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="items-per-page">Items Per Page:</label>
+                                <select id="items-per-page">
+                                    <option value="6">6</option>
+                                    <option value="12">12</option>
+                                    <option value="18">18</option>
+                                    <option value="24">24</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="theme">Theme:</label>
+                                <select id="theme">
+                                    <option value="light">Light</option>
+                                    <option value="dark">Dark</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="auto-backup"> Enable Automatic Backup
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="print-receipt"> Auto-print Receipt After Sale
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <button type="button" id="reset-database" class="btn-danger" style="width: auto;">Reset Database</button>
+                            <small style="color: #666; display: block; margin-top: 5px;">Use this if you encounter data issues</small>
+                        </div>
+                        <button type="submit" class="btn-primary">Save System Settings</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="section active">
+            <h2><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
+
+            <!-- Key Metrics Row -->
+            <div class="dashboard-metrics">
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-rupee-sign"></i>
+                    </div>
+                    <div class="metric-content">
+                        <h3 id="dashboard-total-sales">₹0.00</h3>
+                        <p>Total Sales</p>
+                        <span class="metric-change" id="sales-change">+0%</span>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div class="metric-content">
+                        <h3 id="dashboard-total-orders">0</h3>
+                        <p>Total Orders</p>
+                        <span class="metric-change" id="orders-change">+0%</span>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-boxes"></i>
+                    </div>
+                    <div class="metric-content">
+                        <h3 id="dashboard-total-products">0</h3>
+                        <p>Total Products</p>
+                        <span class="metric-change" id="products-change">+0%</span>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="metric-content">
+                        <h3 id="dashboard-low-stock">0</h3>
+                        <p>Low Stock Items</p>
+                        <span class="metric-change" id="low-stock-change">+0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts and Recent Activity Row -->
+            <div class="dashboard-charts">
+                <!-- Sales Chart -->
+                <div class="chart-container">
+                    <h3>Monthly Sales Trend</h3>
+                    <canvas id="dashboard-sales-chart" width="400" height="200"></canvas>
+                </div>
+
+                <!-- Top Products -->
+                <div class="chart-container">
+                    <h3>Top Selling Products</h3>
+                    <div id="top-products-list" class="top-products-list">
+                        <p class="no-data">No sales data available</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity and Quick Actions -->
+            <div class="dashboard-activity">
+                <!-- Recent Sales -->
+                <div class="activity-container">
+                    <h3><i class="fas fa-history"></i> Recent Sales</h3>
+                    <div id="recent-sales-list" class="activity-list">
+                        <p class="no-data">No recent sales</p>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="activity-container">
+                    <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+                    <div class="quick-actions">
+                        <button onclick="showSection('inventory')" class="action-btn">
+                            <i class="fas fa-plus"></i> Add Product
+                        </button>
+                        <button onclick="showSection('billing')" class="action-btn">
+                            <i class="fas fa-cash-register"></i> New Sale
+                        </button>
+                        <button onclick="showSection('reports')" class="action-btn">
+                            <i class="fas fa-chart-bar"></i> View Reports
+                        </button>
+                        <button onclick="document.getElementById('nav-settings').click()" class="action-btn">
+                            <i class="fas fa-cog"></i> Settings
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Low Stock Alert -->
+                <div class="activity-container">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Low Stock Alert</h3>
+                    <div id="low-stock-alerts" class="activity-list">
+                        <p class="no-data">All items are well stocked</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Today's Summary -->
+            <div class="dashboard-summary">
+                <h3><i class="fas fa-calendar-day"></i> Today's Summary</h3>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <span class="summary-label">Today's Sales:</span>
+                        <span class="summary-value" id="today-sales">₹0.00</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Today's Orders:</span>
+                        <span class="summary-value" id="today-orders">0</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Average Order:</span>
+                        <span class="summary-value" id="avg-order-today">₹0.00</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">GST Collected:</span>
+                        <span class="summary-value" id="today-gst">₹0.00</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Inventory Section -->
+        <section id="inventory" class="section active">
+            <h2>Inventory Management</h2>
+            <form id="product-form">
+                <div class="form-row">
+                    <input type="text" id="product-name" placeholder="Product Name" required>
+                    <input type="text" id="barcode" placeholder="Barcode">
+                </div>
+                <div class="form-row">
+                    <input type="text" id="hsn-code" placeholder="HSN Code">
+                    <select id="product-category" required>
+                        <option value="">Select Category</option>
+                        <option value="Groceries">Groceries</option>
+                        <option value="Beverages">Beverages</option>
+                        <option value="Snacks">Snacks</option>
+                        <option value="Household">Household</option>
+                        <option value="Personal Care">Personal Care</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <input type="text" id="new-category" placeholder="New Category">
+                    <button type="button" id="add-category-btn">Add Category</button>
+                </div>
+                <div class="form-row">
+                    <input type="number" id="mrp" placeholder="MRP (INR)" step="0.01">
+                    <input type="number" id="cost-price" placeholder="Cost Price (INR)" step="0.01">
+                </div>
+                <div class="form-row">
+                    <input type="number" id="selling-price" placeholder="Selling Price (INR)" step="0.01" required>
+                    <input type="number" id="discount-price" placeholder="Discount Price (INR)" step="0.01">
+                </div>
+                <div class="form-row">
+                    <input type="number" id="gst-rate" placeholder="GST Rate (%)" step="0.01" required>
+                    <input type="number" id="stock" placeholder="Stock Quantity" required>
+                    <input type="number" id="min-stock" placeholder="Min Stock Qty" min="0">
+                </div>
+                <button type="submit">Add Product</button>
+            </form>
+            <div id="inventory-filter">
+                <div>
+                    <label for="filter-category">Filter by Category:</label>
+                    <select id="filter-category">
+                        <option value="">All Categories</option>
+                        <option value="Groceries">Groceries</option>
+                        <option value="Beverages">Beverages</option>
+                        <option value="Snacks">Snacks</option>
+                        <option value="Household">Household</option>
+                        <option value="Personal Care">Personal Care</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="sort-by">Sort by:</label>
+                    <select id="sort-by">
+                        <option value="name">Name</option>
+                        <option value="sellingPrice">Selling Price</option>
+                        <option value="stock">Stock</option>
+                        <option value="minStock">Min Stock</option>
+                    </select>
+                </div>
+                <input type="text" id="filter-name" placeholder="Search by Name">
+            </div>
+            <div id="bulk-actions" class="bulk-actions">
+                <input type="checkbox" id="select-all">
+                <label for="select-all">Select All</label>
+                <button id="bulk-delete">Delete Selected</button>
+            </div>
+            <div id="inventory-grid" class="inventory-grid">
+            </div>
+            <div id="pagination" class="pagination">
+                <button id="prev-page">Previous</button>
+                <span id="page-info">Page 1 of 1</span>
+                <button id="next-page">Next</button>
+            </div>
+        </section>
+
+        <!-- Billing Section -->
+        <section id="billing" class="section">
+            <h2><i class="fas fa-cash-register"></i> Billing</h2>
+            <div class="billing-container">
+                <div class="billing-section customer-section">
+                    <h3><i class="fas fa-user"></i> Customer Details</h3>
+                    <div class="form-row">
+                        <input type="text" id="customer-name" placeholder="Customer Name">
+                        <input type="text" id="customer-phone" placeholder="Phone Number">
+                    </div>
+                </div>
+                <div class="billing-section product-section">
+                    <h3><i class="fas fa-search"></i> Add Product</h3>
+                    <div class="form-row">
+                        <input type="text" id="search-product" placeholder="Search Product by Name or Barcode">
+                        <button id="add-to-cart-btn"><i class="fas fa-cart-plus"></i> Add</button>
+                    </div>
+                    <div id="product-suggestions" class="product-suggestions"></div>
+                </div>
+                <div class="billing-section cart-section">
+                    <h3><i class="fas fa-shopping-cart"></i> Cart <span id="cart-count" class="cart-count">0</span></h3>
+                    <div id="cart-items" class="cart-items">
+                        <p class="empty-cart">Cart is empty</p>
+                    </div>
+                    <div class="cart-totals">
+                        <div class="total-row">
+                            <span>Items:</span>
+                            <span id="total-items">0</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Subtotal:</span>
+                            <span id="subtotal"><span class="currency-symbol">₹</span>0.00</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Discount:</span>
+                            <div class="discount-inputs">
+                                <input type="number" id="discount-percent" placeholder="%" min="0" max="100" step="0.01">
+                                <input type="number" id="discount-flat" placeholder="₹" min="0" step="0.01">
+                            </div>
+                        </div>
+                        <div class="total-row">
+                            <span>GST:</span>
+                            <span id="total-gst"><span class="currency-symbol">₹</span>0.00</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Round Off:</span>
+                            <span id="round-off"><span class="currency-symbol">₹</span>0.00</span>
+                        </div>
+                        <div class="total-row total-final">
+                            <span>Total:</span>
+                            <span id="total-amount"><span class="currency-symbol">₹</span>0.00</span>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="billing-section actions-section">
+                    <h3><i class="fas fa-credit-card"></i> Payment & Actions</h3>
+                    <div class="form-row">
+                        <select id="payment-method">
+                            <option value="Cash">Cash</option>
+                            <option value="Card">Card</option>
+                            <option value="UPI">UPI</option>
+                            <option value="Split">Split Payment</option>
+                        </select>
+                        <input type="text" id="reference-no" placeholder="Reference No (Optional)">
+                    </div>
+                    <div id="split-payment-section" style="display:none;">
+                        <h4>Split Payment</h4>
+                        <div class="form-row">
+                            <input type="number" id="cash-amount" placeholder="Cash Amount" min="0" step="0.01">
+                            <input type="number" id="online-amount" placeholder="Online Amount" min="0" step="0.01">
+                        </div>
+                    </div>
+                    <div class="billing-actions">
+                        <button id="hold-bill-btn" class="btn-secondary"><i class="fas fa-pause"></i> Hold</button>
+                        <button id="retrieve-bill-btn" class="btn-secondary"><i class="fas fa-play"></i> Retrieve</button>
+                        <button id="clear-cart-btn" class="btn-danger"><i class="fas fa-trash"></i> Clear</button>
+                        <button id="generate-invoice" class="btn-primary"><i class="fas fa-file-invoice"></i> Generate Invoice</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Reports Section -->
+        <section id="reports" class="section">
+            <h2><i class="fas fa-chart-bar"></i> Advanced Reports</h2>
+
+            <!-- Date Range Filter -->
+            <div class="reports-filters">
+                <div class="filter-group">
+                    <label for="report-start-date">From Date:</label>
+                    <input type="date" id="report-start-date">
+                </div>
+                <div class="filter-group">
+                    <label for="report-end-date">To Date:</label>
+                    <input type="date" id="report-end-date">
+                </div>
+                <button id="apply-filters" class="btn-primary">Apply Filters</button>
+                <button id="reset-filters" class="btn-secondary">Reset</button>
+            </div>
+
+            <!-- Reports Tabs -->
+            <div class="reports-tabs">
+                <button class="report-tab-btn active" data-report="overview">Overview</button>
+                <button class="report-tab-btn" data-report="category">Category Wise</button>
+                <button class="report-tab-btn" data-report="payment">Payment Mode</button>
+                <button class="report-tab-btn" data-report="trends">Trends</button>
+            </div>
+
+            <!-- Overview Tab -->
+            <div id="overview-tab" class="report-tab-content active">
+                <div id="reports-summary">
+                    <div class="summary-card">
+                        <h4>Total Sales</h4>
+                        <p class="summary-value"><span class="currency-symbol">₹</span><span id="total-sales">0.00</span></p>
+                        <span class="summary-change" id="sales-change">+0%</span>
+                    </div>
+                    <div class="summary-card">
+                        <h4>Total Orders</h4>
+                        <p class="summary-value"><span id="total-orders">0</span></p>
+                        <span class="summary-change" id="orders-change">+0%</span>
+                    </div>
+                    <div class="summary-card">
+                        <h4>GST Collected</h4>
+                        <p class="summary-value"><span class="currency-symbol">₹</span><span id="total-gst-collected">0.00</span></p>
+                        <span class="summary-change" id="gst-change">+0%</span>
+                    </div>
+                    <div class="summary-card">
+                        <h4>Average Order</h4>
+                        <p class="summary-value"><span class="currency-symbol">₹</span><span id="avg-order">0.00</span></p>
+                        <span class="summary-change" id="avg-change">+0%</span>
+                    </div>
+                </div>
+
+                <div class="reports-charts">
+                    <div class="chart-container">
+                        <h3>Sales Trend</h3>
+                        <canvas id="sales-chart" width="400" height="200"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Payment Methods Distribution</h3>
+                        <canvas id="payment-chart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+
+                <div class="reports-actions">
+                    <button id="export-csv"><i class="fas fa-download"></i> Export CSV</button>
+                    <button id="print-report"><i class="fas fa-print"></i> Print Report</button>
+                </div>
+
+                <table id="sales-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Invoice #</th>
+                            <th>Customer</th>
+                            <th>Items</th>
+                            <th>Amount</th>
+                            <th>Payment</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sales-body">
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Category Wise Tab -->
+            <div id="category-tab" class="report-tab-content">
+                <h3>Category-wise Sales Analysis</h3>
+                <div class="category-analysis">
+                    <div class="chart-container">
+                        <h3>Sales by Category</h3>
+                        <canvas id="category-chart" width="400" height="250"></canvas>
+                    </div>
+                    <div class="category-table-container">
+                        <table id="category-table">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Total Sales</th>
+                                    <th>Items Sold</th>
+                                    <th>Avg Price</th>
+                                    <th>% of Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="category-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Mode Tab -->
+            <div id="payment-tab" class="report-tab-content">
+                <h3>Payment Method Analysis</h3>
+                <div class="payment-analysis">
+                    <div class="payment-metrics">
+                        <div class="metric-card">
+                            <h4>Cash Payments</h4>
+                            <p class="metric-value"><span class="currency-symbol">₹</span><span id="cash-total">0.00</span></p>
+                            <p class="metric-count"><span id="cash-count">0</span> transactions</p>
+                        </div>
+                        <div class="metric-card">
+                            <h4>Card Payments</h4>
+                            <p class="metric-value"><span class="currency-symbol">₹</span><span id="card-total">0.00</span></p>
+                            <p class="metric-count"><span id="card-count">0</span> transactions</p>
+                        </div>
+                        <div class="metric-card">
+                            <h4>UPI Payments</h4>
+                            <p class="metric-value"><span class="currency-symbol">₹</span><span id="upi-total">0.00</span></p>
+                            <p class="metric-count"><span id="upi-count">0</span> transactions</p>
+                        </div>
+                        <div class="metric-card">
+                            <h4>Split Payments</h4>
+                            <p class="metric-value"><span class="currency-symbol">₹</span><span id="split-total">0.00</span></p>
+                            <p class="metric-count"><span id="split-count">0</span> transactions</p>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Payment Method Distribution</h3>
+                        <canvas id="payment-method-chart" width="400" height="250"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trends Tab -->
+            <div id="trends-tab" class="report-tab-content">
+                <h3>Sales Trends & Analytics</h3>
+                <div class="trends-analysis">
+                    <div class="chart-container">
+                        <h3>Daily Sales Trend</h3>
+                        <canvas id="daily-trend-chart" width="400" height="250"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Weekly Comparison</h3>
+                        <canvas id="weekly-chart" width="400" height="250"></canvas>
+                    </div>
+                </div>
+                <div class="trends-metrics">
+                    <div class="trend-card">
+                        <h4>Best Day</h4>
+                        <p id="best-day">N/A</p>
+                        <p class="trend-amount"><span class="currency-symbol">₹</span><span id="best-day-amount">0.00</span></p>
+                    </div>
+                    <div class="trend-card">
+                        <h4>Peak Hour</h4>
+                        <p id="peak-hour">N/A</p>
+                        <p class="trend-amount"><span class="currency-symbol">₹</span><span id="peak-hour-amount">0.00</span></p>
+                    </div>
+                    <div class="trend-card">
+                        <h4>Growth Rate</h4>
+                        <p id="growth-rate">0%</p>
+                        <p class="trend-subtitle">vs last period</p>
+                    </div>
+                    <div class="trend-card">
+                        <h4>Top Customer</h4>
+                        <p id="top-customer">N/A</p>
+                        <p class="trend-amount"><span class="currency-symbol">₹</span><span id="top-customer-amount">0.00</span></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <footer id="storage-indicator">
+        <small>Data stored in: <span id="storage-type">Loading...</span> | Last saved: <span id="last-saved">Never</span></small>
+        <div class="footer-actions">
+            <button id="backup-now-btn" class="btn-link">Backup Now</button>
+            <button id="export-data-btn" class="btn-link">Export Data</button>
+            <input type="file" id="import-data-input" accept=".json" style="display:none;">
+            <button id="import-data-btn" class="btn-link">Import Data</button>
+        </div>
+    </footer>
+    </div>
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
+        import { getDatabase, ref, set, get, update, remove, push, onValue } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-0DlZLsSKBomOs1aNoZJmTdalkmNG76c",
+            authDomain: "staffmanagementapp-ed7d8.firebaseapp.com",
+            databaseURL: "https://staffmanagementapp-ed7d8-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "staffmanagementapp-ed7d8",
+            storageBucket: "staffmanagementapp-ed7d8.firebasestorage.app",
+            messagingSenderId: "529877240471",
+            appId: "1:529877240471:web:ff40ce2112648e07b7f7d2",
+            measurementId: "G-H5TCKRFBPS"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+
+        // Make Firebase available globally
+        window.firebaseApp = app;
+        window.firebaseAuth = auth;
+        window.firebaseDatabase = database;
+        window.firebaseFunctions = { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, getDatabase, ref, set, get, update, remove, push, onValue };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Invoice Template -->
+    <div id="invoice-template" style="display: none;">
+        <div id="invoice-content">
+            <div id="invoice-header">
+                <div id="shop-info">
+                    <h1 id="invoice-shop-name">Shop Name</h1>
+                    <p id="invoice-shop-address"></p>
+                    <p id="invoice-shop-phone"></p>
+                    <p id="invoice-shop-email"></p>
+                    <p id="invoice-shop-gst"></p>
+                </div>
+                <div id="invoice-logo"></div>
+            </div>
+            <h2>Invoice</h2>
+            <div class="invoice-details">
+                <p>Invoice #: <span id="invoice-id"></span></p>
+                <p>Date: <span id="invoice-date"></span></p>
+                <p>Customer: <span id="invoice-customer"></span></p>
+                <p>Phone: <span id="invoice-phone"></span></p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Qty</th>
+                        <th>Rate</th>
+                        <th>GST</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody id="invoice-items">
+                </tbody>
+            </table>
+            <div class="invoice-totals">
+                <p>Subtotal: <span class="currency-symbol">₹</span><span id="invoice-subtotal"></span></p>
+                <p>Discount: <span id="invoice-discount"></span></p>
+                <p>GST: <span class="currency-symbol">₹</span><span id="invoice-gst"></span></p>
+                <p>Round Off: <span class="currency-symbol">₹</span><span id="invoice-roundoff">0.00</span></p>
+                <hr>
+                <p><strong>Total: <span class="currency-symbol">₹</span><span id="invoice-total"></span></strong></p>
+                <p>Payment Method: <span id="invoice-payment"></span></p>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
