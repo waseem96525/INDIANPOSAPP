@@ -1849,53 +1849,36 @@ td button.edit:hover {
         font-size: 14px;
     }
 
-    table {
-        width: 100%;
-        border-collapse: collapse;
+    .simple-items {
         margin: 10px 0;
         font-size: 14px;
         font-weight: bolder;
+        line-height: 1.6;
     }
 
-    th, td {
-        border: 2px solid #000;
-        padding: 4px;
-        text-align: left;
+    .simple-items p {
+        margin: 3px 0;
         font-weight: bolder;
     }
 
-    th {
-        background-color: #d0d0d0;
-        text-align: center;
-        font-size: 15px;
-    }
-
-    td {
-        text-align: center;
-    }
-
-    td:nth-child(1) {
-        text-align: left;
-    }
-
     .invoice-totals {
-        text-align: right;
-        margin-top: 8px;
-        padding-top: 5px;
+        text-align: center;
+        margin-top: 10px;
+        padding-top: 6px;
         border-top: 2px solid #000;
         font-weight: bolder;
     }
 
     .invoice-totals p {
-        margin: 3px 0;
-        font-size: 15px;
+        margin: 4px 0;
+        font-size: 16px;
         font-weight: bolder;
     }
 
-    .invoice-totals p:last-child {
+    .invoice-totals p:first-child {
         font-weight: bolder;
-        font-size: 17px;
-        margin-top: 5px;
+        font-size: 18px;
+        margin-bottom: 6px;
     }
 
     th, td {

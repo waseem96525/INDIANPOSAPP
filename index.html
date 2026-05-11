@@ -737,20 +737,10 @@
                 <p>Date: <span id="invoice-date"></span></p>
                 <p>Customer: <span id="invoice-customer"></span></p>
             </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Product</th>
-                        <th>Qty</th>
-                        <th>Total</th>
-                    </tr>
-                </thead>
-                <tbody id="invoice-items">
-                </tbody>
-            </table>
+            <div id="invoice-items" class="simple-items">
+                <!-- Items will be listed here -->
+            </div>
             <div class="invoice-totals">
-                <p>Subtotal: <span class="currency-symbol">₹</span><span id="invoice-subtotal"></span></p>
-                <p>GST: <span class="currency-symbol">₹</span><span id="invoice-gst"></span></p>
                 <p>Total: <span class="currency-symbol">₹</span><span id="invoice-total"></span></p>
                 <p>Payment: <span id="invoice-payment"></span></p>
             </div>

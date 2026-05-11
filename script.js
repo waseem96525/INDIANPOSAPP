@@ -1075,8 +1075,6 @@ generateInvoiceBtn.addEventListener('click', () => {
     document.getElementById('invoice-id').textContent = invoice.id;
     document.getElementById('invoice-date').textContent = invoice.date + ' ' + invoice.time;
     document.getElementById('invoice-customer').textContent = invoice.customer;
-    document.getElementById('invoice-subtotal').textContent = systemSettings.currency + invoice.subtotal.toFixed(2);
-    document.getElementById('invoice-gst').textContent = systemSettings.currency + invoice.gst.toFixed(2);
     document.getElementById('invoice-payment').textContent = invoice.payment + (invoice.reference ? ` (${invoice.reference})` : '');
     document.getElementById('invoice-total').textContent = systemSettings.currency + invoice.total.toFixed(2);
 
@@ -1086,13 +1084,11 @@ generateInvoiceBtn.addEventListener('click', () => {
         const price = item.product.sellingPrice || item.product.price || 0;
         const gstAmount = (price * item.qty * item.product.gstRate) / 100;
         const itemTotal = (price * item.qty) + gstAmount;
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${item.product.name}</td>
-            <td>${item.qty}</td>
-            <td>${itemTotal.toFixed(2)}</td>
-        `;
-        invoiceItems.appendChild(row);
+        const itemDiv = document.createElement('p');
+        itemDiv.textContent = `${item.product.name} x${item.qty} - ₹${itemTotal.toFixed(2)}`;
+        itemDiv.style.margin = '2px 0';
+        itemDiv.style.fontWeight = 'bolder';
+        invoiceItems.appendChild(itemDiv);
     });
 
     const invoiceTemplate = document.getElementById('invoice-template');
@@ -1121,8 +1117,6 @@ function reprintBill(invoice) {
     document.getElementById('invoice-id').textContent = invoice.id;
     document.getElementById('invoice-date').textContent = (invoice.date || '') + ' ' + (invoice.time || '');
     document.getElementById('invoice-customer').textContent = invoice.customer;
-    document.getElementById('invoice-subtotal').textContent = systemSettings.currency + invoice.subtotal.toFixed(2);
-    document.getElementById('invoice-gst').textContent = systemSettings.currency + invoice.gst.toFixed(2);
     document.getElementById('invoice-payment').textContent = invoice.payment + (invoice.reference ? ` (${invoice.reference})` : '');
     document.getElementById('invoice-total').textContent = systemSettings.currency + invoice.total.toFixed(2);
 
@@ -1132,13 +1126,11 @@ function reprintBill(invoice) {
         const price = item.product.sellingPrice || item.product.price || 0;
         const gstAmount = (price * item.qty * item.product.gstRate) / 100;
         const itemTotal = (price * item.qty) + gstAmount;
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${item.product.name}</td>
-            <td>${item.qty}</td>
-            <td>${itemTotal.toFixed(2)}</td>
-        `;
-        invoiceItems.appendChild(row);
+        const itemDiv = document.createElement('p');
+        itemDiv.textContent = `${item.product.name} x${item.qty} - ₹${itemTotal.toFixed(2)}`;
+        itemDiv.style.margin = '2px 0';
+        itemDiv.style.fontWeight = 'bolder';
+        invoiceItems.appendChild(itemDiv);
     });
 
     const invoiceTemplate = document.getElementById('invoice-template');
