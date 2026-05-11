@@ -342,79 +342,137 @@
         </section>
 
         <!-- Inventory Section -->
-        <section id="inventory" class="section active">
-            <h2>Inventory Management</h2>
-            <form id="product-form">
-                <div class="form-row">
-                    <input type="text" id="product-name" placeholder="Product Name" required>
-                    <input type="text" id="barcode" placeholder="Barcode">
+        <section id="inventory" class="section">
+            <div class="inventory-header">
+                <h2><i class="fas fa-boxes"></i> Inventory Management</h2>
+                <div class="inventory-actions">
+                    <button id="export-products-btn" class="btn-secondary" title="Export Products"><i class="fas fa-download"></i> Export</button>
+                    <button id="import-products-btn" class="btn-secondary" title="Import Products"><i class="fas fa-upload"></i> Import</button>
+                    <input type="file" id="import-file" accept=".csv,.json" style="display:none;">
                 </div>
-                <div class="form-row">
-                    <input type="text" id="hsn-code" placeholder="HSN Code">
-                    <select id="product-category" required>
-                        <option value="">Select Category</option>
-                        <option value="Groceries">Groceries</option>
-                        <option value="Beverages">Beverages</option>
-                        <option value="Snacks">Snacks</option>
-                        <option value="Household">Household</option>
-                        <option value="Personal Care">Personal Care</option>
-                        <option value="Electronics">Electronics</option>
-                        <option value="Other">Other</option>
-                    </select>
-                    <input type="text" id="new-category" placeholder="New Category">
-                    <button type="button" id="add-category-btn">Add Category</button>
-                </div>
-                <div class="form-row">
-                    <input type="number" id="mrp" placeholder="MRP (INR)" step="0.01">
-                    <input type="number" id="cost-price" placeholder="Cost Price (INR)" step="0.01">
-                </div>
-                <div class="form-row">
-                    <input type="number" id="selling-price" placeholder="Selling Price (INR)" step="0.01" required>
-                    <input type="number" id="discount-price" placeholder="Discount Price (INR)" step="0.01">
-                </div>
-                <div class="form-row">
-                    <input type="number" id="gst-rate" placeholder="GST Rate (%)" step="0.01" required>
-                    <input type="number" id="stock" placeholder="Stock Quantity" required>
-                    <input type="number" id="min-stock" placeholder="Min Stock Qty" min="0">
-                </div>
-                <button type="submit">Add Product</button>
-            </form>
-            <div id="inventory-filter">
-                <div>
-                    <label for="filter-category">Filter by Category:</label>
+            </div>
+
+            <!-- Product Form -->
+            <div class="inventory-form-container">
+                <h3><i class="fas fa-plus"></i> Add New Product</h3>
+                <form id="product-form" class="modern-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="product-name"><i class="fas fa-tag"></i> Product Name</label>
+                            <input type="text" id="product-name" placeholder="Enter product name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="barcode"><i class="fas fa-barcode"></i> Barcode</label>
+                            <input type="text" id="barcode" placeholder="Scan or enter barcode">
+                        </div>
+                        <div class="form-group">
+                            <label for="hsn-code"><i class="fas fa-code"></i> HSN Code</label>
+                            <input type="text" id="hsn-code" placeholder="HSN/SAC code">
+                        </div>
+                        <div class="form-group">
+                            <label for="product-category"><i class="fas fa-list"></i> Category</label>
+                            <select id="product-category" required>
+                                <option value="">Select Category</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-category"><i class="fas fa-plus-circle"></i> New Category</label>
+                            <div class="input-with-btn">
+                                <input type="text" id="new-category" placeholder="Create new category">
+                                <button type="button" id="add-category-btn" class="btn-small"><i class="fas fa-plus"></i></button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="mrp"><i class="fas fa-rupee-sign"></i> MRP</label>
+                            <input type="number" id="mrp" placeholder="0.00" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label for="cost-price"><i class="fas fa-money-bill-wave"></i> Cost Price</label>
+                            <input type="number" id="cost-price" placeholder="0.00" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label for="selling-price"><i class="fas fa-tags"></i> Selling Price</label>
+                            <input type="number" id="selling-price" placeholder="0.00" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="discount-price"><i class="fas fa-percent"></i> Discount Price</label>
+                            <input type="number" id="discount-price" placeholder="0.00" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label for="gst-rate"><i class="fas fa-calculator"></i> GST Rate (%)</label>
+                            <input type="number" id="gst-rate" placeholder="0.00" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="stock"><i class="fas fa-cubes"></i> Stock Quantity</label>
+                            <input type="number" id="stock" placeholder="0" required min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="min-stock"><i class="fas fa-exclamation-triangle"></i> Min Stock Alert</label>
+                            <input type="number" id="min-stock" placeholder="0" min="0">
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Add Product</button>
+                        <button type="button" id="clear-form-btn" class="btn-secondary"><i class="fas fa-eraser"></i> Clear</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Filters and Search -->
+            <div class="inventory-filters">
+                <div class="filter-group">
+                    <label for="filter-category"><i class="fas fa-filter"></i> Category</label>
                     <select id="filter-category">
                         <option value="">All Categories</option>
-                        <option value="Groceries">Groceries</option>
-                        <option value="Beverages">Beverages</option>
-                        <option value="Snacks">Snacks</option>
-                        <option value="Household">Household</option>
-                        <option value="Personal Care">Personal Care</option>
-                        <option value="Electronics">Electronics</option>
-                        <option value="Other">Other</option>
                     </select>
                 </div>
-                <div>
-                    <label for="sort-by">Sort by:</label>
+                <div class="filter-group">
+                    <label for="sort-by"><i class="fas fa-sort"></i> Sort by</label>
                     <select id="sort-by">
                         <option value="name">Name</option>
-                        <option value="sellingPrice">Selling Price</option>
+                        <option value="sellingPrice">Price</option>
                         <option value="stock">Stock</option>
                         <option value="minStock">Min Stock</option>
+                        <option value="category">Category</option>
                     </select>
                 </div>
-                <input type="text" id="filter-name" placeholder="Search by Name">
+                <div class="filter-group search-group">
+                    <label for="filter-name"><i class="fas fa-search"></i> Search</label>
+                    <input type="text" id="filter-name" placeholder="Product name or barcode">
+                </div>
+                <div class="filter-stats">
+                    <span id="product-count">0 products</span>
+                </div>
             </div>
-            <div id="bulk-actions" class="bulk-actions">
-                <input type="checkbox" id="select-all">
-                <label for="select-all">Select All</label>
-                <button id="bulk-delete">Delete Selected</button>
+
+            <!-- Bulk Actions -->
+            <div id="bulk-actions" class="bulk-actions modern">
+                <div class="bulk-select">
+                    <input type="checkbox" id="select-all">
+                    <label for="select-all">Select All</label>
+                </div>
+                <div class="bulk-buttons">
+                    <button id="bulk-edit-btn" class="btn-secondary" disabled><i class="fas fa-edit"></i> Edit</button>
+                    <button id="bulk-stock-btn" class="btn-secondary" disabled><i class="fas fa-plus-minus"></i> Adjust Stock</button>
+                    <button id="bulk-delete" class="btn-danger" disabled><i class="fas fa-trash"></i> Delete</button>
+                </div>
             </div>
-            <div id="inventory-grid" class="inventory-grid">
+
+            <!-- Inventory Grid -->
+            <div id="inventory-grid" class="inventory-grid modern">
             </div>
-            <div id="pagination" class="pagination">
-                <button id="prev-page">Previous</button>
+
+            <!-- Pagination -->
+            <div id="pagination" class="pagination modern">
+                <button id="prev-page" class="btn-secondary"><i class="fas fa-chevron-left"></i> Previous</button>
                 <span id="page-info">Page 1 of 1</span>
-                <button id="next-page">Next</button>
+                <button id="next-page" class="btn-secondary">Next <i class="fas fa-chevron-right"></i></button>
+            </div>
+
+            <!-- Low Stock Alert -->
+            <div id="low-stock-alert" class="low-stock-alert" style="display:none;">
+                <h4><i class="fas fa-exclamation-triangle"></i> Low Stock Alert</h4>
+                <div id="low-stock-list"></div>
             </div>
         </section>
 

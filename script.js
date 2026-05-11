@@ -619,6 +619,13 @@ const selectAllCheckbox = document.getElementById('select-all');
 const bulkDeleteBtn = document.getElementById('bulk-delete');
 const exportCsvBtn = document.getElementById('export-csv');
 const reprintBillBtn = document.getElementById('reprint-bill-btn');
+const exportProductsBtn = document.getElementById('export-products-btn');
+const importProductsBtn = document.getElementById('import-products-btn');
+const importFile = document.getElementById('import-file');
+const clearFormBtn = document.getElementById('clear-form-btn');
+const bulkEditBtn = document.getElementById('bulk-edit-btn');
+const bulkStockBtn = document.getElementById('bulk-stock-btn');
+const productCountEl = document.getElementById('product-count');
 
 
 
@@ -666,6 +673,104 @@ function scanBarcode() {
 
 function showQuickKeys() {
     alert('Quick keys: Press number keys to add quantities, F1 for discount, etc.');
+}
+
+function exportProducts() {
+    const csv = products.map(p => [
+        p.name, p.barcode, p.hsn, p.category, p.mrp, p.costPrice, p.sellingPrice, p.discountPrice, p.gstRate, p.stock, p.minStock
+    ].join(',')).join('\n');
+    const header = 'Name,Barcode,HSN,Category,MRP,Cost Price,Selling Price,Discount Price,GST Rate,Stock,Min Stock\n';
+    const blob = new Blob([header + csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'products.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function importProducts(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const csv = e.target.result;
+        const lines = csv.split('\n').slice(1); // Skip header
+        const newProducts = lines.map(line => {
+            const [name, barcode, hsn, category, mrp, costPrice, sellingPrice, discountPrice, gstRate, stock, minStock] = line.split(',');
+            return {
+                id: Date.now() + Math.random(),
+                name: name?.trim(),
+                barcode: barcode?.trim(),
+                hsn: hsn?.trim(),
+                category: category?.trim(),
+                mrp: parseFloat(mrp) || 0,
+                costPrice: parseFloat(costPrice) || 0,
+                sellingPrice: parseFloat(sellingPrice) || 0,
+                discountPrice: parseFloat(discountPrice) || 0,
+                gstRate: parseFloat(gstRate) || 0,
+                stock: parseInt(stock) || 0,
+                minStock: parseInt(minStock) || 0
+            };
+        }).filter(p => p.name);
+
+        products.push(...newProducts);
+        saveUserData(currentUser, 'products', products).catch(error => console.error('Failed to save products:', error));
+        displayProducts(filterCategory.value, filterName.value, sortBy.value, currentPage);
+        updateProductCount();
+        alert(`Imported ${newProducts.length} products`);
+    };
+    reader.readAsText(file);
+}
+
+function clearProductForm() {
+    document.getElementById('product-form').reset();
+}
+
+function toggleBulkActions() {
+    const checkedBoxes = document.querySelectorAll('.product-checkbox:checked');
+    const hasSelection = checkedBoxes.length > 0;
+    bulkEditBtn.disabled = !hasSelection;
+    bulkStockBtn.disabled = !hasSelection;
+    bulkDeleteBtn.disabled = !hasSelection;
+}
+
+function adjustStock(index) {
+    const product = products[index];
+    const adjustment = parseInt(prompt(`Current stock: ${product.stock}\nEnter adjustment (+/-):`)) || 0;
+    product.stock += adjustment;
+    if (product.stock < 0) product.stock = 0;
+    saveUserData(currentUser, 'products', products).catch(error => console.error('Failed to save products:', error));
+    displayProducts(filterCategory.value, filterName.value, sortBy.value, currentPage);
+}
+
+function updateProductCount() {
+    if (productCountEl) {
+        const filteredCount = products.filter(p =>
+            (filterCategory.value === '' || p.category === filterCategory.value) &&
+            (filterName.value === '' || p.name.toLowerCase().includes(filterName.value.toLowerCase()))
+        ).length;
+        productCountEl.textContent = `${filteredCount} product${filteredCount !== 1 ? 's' : ''}`;
+    }
+}
+
+function displayLowStockAlert() {
+    const lowStockProducts = products.filter(p => (p.stock || 0) <= (p.minStock || 0));
+    const alertEl = document.getElementById('low-stock-alert');
+    const listEl = document.getElementById('low-stock-list');
+
+    if (lowStockProducts.length > 0) {
+        listEl.innerHTML = lowStockProducts.map(p => `
+            <div class="low-stock-item">
+                <strong>${p.name}</strong><br>
+                Stock: ${p.stock || 0} / Min: ${p.minStock || 0}
+            </div>
+        `).join('');
+        alertEl.style.display = 'block';
+    } else {
+        alertEl.style.display = 'none';
+    }
 }
 
 // Category management
@@ -728,6 +833,11 @@ nextPageBtn.addEventListener('click', () => {
 selectAllCheckbox.addEventListener('change', () => {
     const checkboxes = document.querySelectorAll('.product-checkbox');
     checkboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
+    toggleBulkActions();
+
+    // Add change listener to checkboxes
+    const productCheckboxes = document.querySelectorAll('.product-checkbox');
+    productCheckboxes.forEach(cb => cb.addEventListener('change', toggleBulkActions));
 });
 
 bulkDeleteBtn.addEventListener('click', () => {
@@ -747,6 +857,7 @@ bulkDeleteBtn.addEventListener('click', () => {
 // Inventory Management
 function displayProducts(filterCategory = '', filterName = '', sortBy = 'name', page = 1) {
     const inventoryGrid = document.getElementById('inventory-grid');
+    inventoryGrid.className = 'inventory-grid modern';
     inventoryGrid.innerHTML = '';
     let filteredProducts = products.filter(product =>
         (filterCategory === '' || product.category === filterCategory) &&
@@ -776,19 +887,37 @@ function displayProducts(filterCategory = '', filterName = '', sortBy = 'name', 
         card.className = `product-card ${isLowStock ? 'low-stock' : ''}`;
         card.innerHTML = `
             <input type="checkbox" class="product-checkbox" data-id="${product.id}">
-            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgZmlsbD0iI2NjYyIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmaWxsPSJ3aGl0ZSIgZHk9Ii4zNWVtIiBmb250LXNpemU9IjE0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5Qcm9kdWN0PC90ZXh0Pjwvc3ZnPg==" alt="Product Image">
-            <h3>${product.name || 'Unknown'}</h3>
-            <p><strong>Barcode:</strong> ${product.barcode || 'N/A'}</p>
-            <p><strong>Category:</strong> ${product.category || 'N/A'}</p>
-            <p><strong>MRP:</strong> ${systemSettings.currency}${(product.mrp || 0).toFixed(2)}</p>
-            <p><strong>Cost Price:</strong> ${systemSettings.currency}${(product.costPrice || 0).toFixed(2)}</p>
-            <p><strong>Selling Price:</strong> ${systemSettings.currency}${(product.sellingPrice || product.price || 0).toFixed(2)}</p>
-            <p><strong>Discount Price:</strong> ${systemSettings.currency}${(product.discountPrice || 0).toFixed(2)}</p>
-            <p><strong>GST:</strong> ${product.gstRate || 0}%</p>
-            <p><strong>Stock:</strong> ${stock}${minStock > 0 ? ` (Min: ${minStock})` : ''}</p>
+            <div class="card-header">
+                <div class="product-image">
+                    <i class="fas fa-box"></i>
+                </div>
+                <div>
+                    <h3>${product.name || 'Unknown Product'}</h3>
+                    <small style="color: #6c757d;">${product.category || 'No Category'}</small>
+                </div>
+            </div>
+            <div class="product-details">
+                <div class="product-detail">
+                    <span>Barcode:</span>
+                    <strong>${product.barcode || 'N/A'}</strong>
+                </div>
+                <div class="product-detail">
+                    <span>Stock:</span>
+                    <strong>${stock}${minStock > 0 ? ` / ${minStock}` : ''}</strong>
+                </div>
+                <div class="product-detail">
+                    <span>Selling Price:</span>
+                    <strong>${systemSettings.currency}${(product.sellingPrice || product.price || 0).toFixed(2)}</strong>
+                </div>
+                <div class="product-detail">
+                    <span>GST:</span>
+                    <strong>${product.gstRate || 0}%</strong>
+                </div>
+            </div>
             <div class="card-actions">
-                <button class="edit" onclick="editProduct(${originalIndex})">Edit</button>
-                <button onclick="deleteProduct(${originalIndex})">Delete</button>
+                <button class="btn-secondary btn-small" onclick="editProduct(${originalIndex})"><i class="fas fa-edit"></i> Edit</button>
+                <button class="btn-secondary btn-small" onclick="adjustStock(${originalIndex})"><i class="fas fa-plus-minus"></i> Stock</button>
+                <button class="btn-danger btn-small" onclick="deleteProduct(${originalIndex})"><i class="fas fa-trash"></i> Delete</button>
             </div>
         `;
         inventoryGrid.appendChild(card);
@@ -799,6 +928,10 @@ function displayProducts(filterCategory = '', filterName = '', sortBy = 'name', 
     prevPageBtn.disabled = currentPage === 1;
     nextPageBtn.disabled = currentPage === totalPages || totalPages === 0;
     selectAllCheckbox.checked = false;
+
+    // Update product count and low stock alert
+    updateProductCount();
+    displayLowStockAlert();
 }
 
 productForm.addEventListener('submit', (e) => {
@@ -820,7 +953,7 @@ productForm.addEventListener('submit', (e) => {
     saveUserData(currentUser, 'products', products).catch(error => console.error('Failed to save products:', error));
     displayProducts(filterCategory.value, filterName.value, sortBy.value, currentPage);
     updateDashboard(); // Refresh dashboard with new product count
-    productForm.reset();
+    clearProductForm();
 });
 
 function editProduct(index) {
@@ -1034,6 +1167,13 @@ clearCartBtn.addEventListener('click', () => {
         discountFlat.value = '';
     }
 });
+
+if (exportProductsBtn) exportProductsBtn.addEventListener('click', exportProducts);
+if (importProductsBtn) importProductsBtn.addEventListener('click', () => importFile.click());
+if (importFile) importFile.addEventListener('change', importProducts);
+if (clearFormBtn) clearFormBtn.addEventListener('click', clearProductForm);
+if (bulkEditBtn) bulkEditBtn.addEventListener('change', toggleBulkActions);
+if (bulkStockBtn) bulkStockBtn.addEventListener('change', toggleBulkActions);
 
 if (reprintBillBtn) reprintBillBtn.addEventListener('click', () => {
     if (sales.length === 0) {
