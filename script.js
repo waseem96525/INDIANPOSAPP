@@ -4,6 +4,7 @@ let currentUser = null;
 // User data storage (will be loaded per user)
 let products = [];
 let sales = [];
+let customers = [];
 let categories = ['Groceries', 'Beverages', 'Snacks', 'Household', 'Personal Care', 'Electronics', 'Other'];
 let cart = [];
 let heldBills = [];
@@ -248,6 +249,7 @@ function loadUserData(user) {
                 // Load each data type
                 products = userData.products || [];
                 sales = userData.sales || [];
+                customers = userData.customers || [];
                 currentInvoiceId = sales.length > 0 ? Math.max(...sales.map(s => s.id)) + 1 : 1;
                 categories = userData.categories || ['Groceries', 'Beverages', 'Snacks', 'Household', 'Personal Care', 'Electronics', 'Other'];
                 heldBills = userData.heldBills || [];
@@ -281,6 +283,11 @@ function loadUserData(user) {
             get(ref(window.firebaseDatabase, `users/${user.uid}/sales`)).then(snapshot => {
                 sales = snapshot.exists() ? Object.values(snapshot.val()) : [];
                 currentInvoiceId = sales.length > 0 ? Math.max(...sales.map(s => s.id)) + 1 : 1;
+            }),
+
+            // Load customers
+            get(ref(window.firebaseDatabase, `users/${user.uid}/customers`)).then(snapshot => {
+                customers = snapshot.exists() ? Object.values(snapshot.val()) : [];
             }),
 
             // Load categories
@@ -553,6 +560,7 @@ function saveAllToUserDB() {
     return Promise.all([
         saveUserData(currentUser, 'products', products),
         saveUserData(currentUser, 'sales', sales),
+        saveUserData(currentUser, 'customers', customers),
         saveUserData(currentUser, 'categories', categories),
         saveUserData(currentUser, 'heldBills', heldBills),
         saveUserData(currentUser, 'shopDetails', shopDetails),
@@ -598,11 +606,9 @@ const balanceAmount = document.getElementById('balance-amount');
 const cartCount = document.getElementById('cart-count');
 const totalItems = document.getElementById('total-items');
 const roundOff = document.getElementById('round-off');
-
+const quickProductsList = document.getElementById('quick-products-list');
 const productSuggestions = document.getElementById('product-suggestions');
 const splitPaymentSection = document.getElementById('split-payment-section');
-const cashAmount = document.getElementById('cash-amount');
-const onlineAmount = document.getElementById('online-amount');
 const holdBillBtn = document.getElementById('hold-bill-btn');
 const retrieveBillBtn = document.getElementById('retrieve-bill-btn');
 const clearCartBtn = document.getElementById('clear-cart-btn');
@@ -613,6 +619,8 @@ const selectAllCheckbox = document.getElementById('select-all');
 const bulkDeleteBtn = document.getElementById('bulk-delete');
 const exportCsvBtn = document.getElementById('export-csv');
 const reprintBillBtn = document.getElementById('reprint-bill-btn');
+
+
 
 
 
@@ -638,6 +646,26 @@ function showSection(sectionId) {
         section.classList.remove('active');
     });
     document.getElementById(sectionId).classList.add('active');
+    if (sectionId === 'billing') {
+        updateQuickProducts();
+    }
+}
+
+// Global functions for onclick
+function scanBarcode() {
+    const barcode = prompt('Enter barcode:');
+    if (barcode) {
+        const product = products.find(p => p.barcode === barcode);
+        if (product) {
+            addToCart(product);
+        } else {
+            alert('Product not found');
+        }
+    }
+}
+
+function showQuickKeys() {
+    alert('Quick keys: Press number keys to add quantities, F1 for discount, etc.');
 }
 
 // Category management
@@ -940,6 +968,20 @@ paymentMethod.addEventListener('change', () => {
     splitPaymentSection.style.display = paymentMethod.value === 'Split' ? 'block' : 'none';
 });
 
+function updateSplitPayment() {
+    const cashAmountEl = document.getElementById('cash-amount');
+    const onlineAmountEl = document.getElementById('online-amount');
+    if (!cashAmountEl || !onlineAmountEl) return;
+    const cash = parseFloat(cashAmountEl.value) || 0;
+    const online = parseFloat(onlineAmountEl.value) || 0;
+    const total = parseFloat(totalAmountEl.textContent.replace(systemSettings.currency, '')) || 0;
+    const totalPaidAmount = cash + online;
+    const balance = total - totalPaidAmount;
+    const totalPaidEl = document.getElementById('total-paid');
+    if (totalPaidEl) totalPaidEl.textContent = systemSettings.currency + totalPaidAmount.toFixed(2);
+    balanceAmount.textContent = (balance >= 0 ? systemSettings.currency : '-' + systemSettings.currency) + Math.abs(balance).toFixed(2);
+}
+
 
 
 holdBillBtn.addEventListener('click', () => {
@@ -993,7 +1035,7 @@ clearCartBtn.addEventListener('click', () => {
     }
 });
 
-reprintBillBtn.addEventListener('click', () => {
+if (reprintBillBtn) reprintBillBtn.addEventListener('click', () => {
     if (sales.length === 0) {
         alert('No bills available to reprint');
         return;
@@ -1724,6 +1766,52 @@ function updateTopProductsList() {
         `;
         topProductsList.appendChild(productDiv);
     });
+}
+
+function updateQuickProducts() {
+    quickProductsList.innerHTML = '';
+    // Show top 8 products by stock or recently added
+    const quickProducts = products.slice(0, 8); // For simplicity, first 8 products
+
+    quickProducts.forEach(product => {
+        const btn = document.createElement('button');
+        btn.className = 'quick-product-btn';
+        btn.onclick = () => addToCart(product);
+        btn.innerHTML = `
+            <span class="product-name">${product.name}</span>
+            <span class="product-price">₹${(product.sellingPrice || product.price || 0).toFixed(2)}</span>
+        `;
+        quickProductsList.appendChild(btn);
+    });
+}
+
+function saveCustomer() {
+    const name = document.getElementById('customer-name').value.trim();
+    const phone = document.getElementById('customer-phone').value.trim();
+    if (!name) {
+        alert('Enter customer name');
+        return;
+    }
+    const customer = { id: Date.now(), name, phone, createdAt: new Date().toISOString() };
+    customers.push(customer);
+    saveUserData(currentUser, 'customers', customers).catch(error => console.error('Failed to save customers:', error));
+    alert('Customer saved');
+}
+
+function loadCustomer() {
+    if (customers.length === 0) {
+        alert('No customers saved');
+        return;
+    }
+    const customerNames = customers.map(c => c.name).join('\n');
+    const selectedName = prompt(`Select customer:\n${customerNames}`);
+    if (selectedName) {
+        const customer = customers.find(c => c.name === selectedName);
+        if (customer) {
+            document.getElementById('customer-name').value = customer.name;
+            document.getElementById('customer-phone').value = customer.phone;
+        }
+    }
 }
 
 function updateRecentActivity() {

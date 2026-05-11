@@ -420,25 +420,48 @@
 
         <!-- Billing Section -->
         <section id="billing" class="section">
-            <h2><i class="fas fa-cash-register"></i> Billing</h2>
+            <div class="billing-header">
+                <h2><i class="fas fa-cash-register"></i> Billing</h2>
+                <div class="billing-controls">
+        <button id="scan-barcode-btn" class="btn-secondary" title="Scan Barcode" onclick="scanBarcode()"><i class="fas fa-barcode"></i></button>
+        <button id="quick-keys-btn" class="btn-secondary" title="Quick Keys" onclick="showQuickKeys()"><i class="fas fa-keyboard"></i></button>
+                </div>
+            </div>
             <div class="billing-container">
                 <div class="billing-section customer-section">
                     <h3><i class="fas fa-user"></i> Customer Details</h3>
-                    <div class="form-row">
-                        <input type="text" id="customer-name" placeholder="Customer Name">
-                        <input type="text" id="customer-phone" placeholder="Phone Number">
+                    <div class="customer-info">
+                        <div class="form-row">
+                            <input type="text" id="customer-name" placeholder="Customer Name">
+                            <input type="text" id="customer-phone" placeholder="Phone Number">
+                        </div>
+                        <div class="customer-actions">
+        <button id="save-customer-btn" class="btn-link" onclick="saveCustomer()">Save Customer</button>
+                        <button id="load-customer-btn" class="btn-link" onclick="loadCustomer()">Load Customer</button>
+                        </div>
                     </div>
                 </div>
                 <div class="billing-section product-section">
                     <h3><i class="fas fa-search"></i> Add Product</h3>
-                    <div class="form-row">
-                        <input type="text" id="search-product" placeholder="Search Product by Name or Barcode">
-                        <button id="add-to-cart-btn"><i class="fas fa-cart-plus"></i> Add</button>
+                    <div class="product-search">
+                        <div class="form-row">
+                            <input type="text" id="search-product" placeholder="Search Product by Name or Barcode" autofocus>
+                            <button id="add-to-cart-btn" class="btn-primary"><i class="fas fa-cart-plus"></i> Add</button>
+                        </div>
+                        <div id="product-suggestions" class="product-suggestions"></div>
                     </div>
-                    <div id="product-suggestions" class="product-suggestions"></div>
+                    <div class="quick-products">
+                        <h4>Quick Add</h4>
+                        <div id="quick-products-list" class="quick-products-grid">
+                            <!-- Quick products will be populated here -->
+                        </div>
+                    </div>
                 </div>
                 <div class="billing-section cart-section">
-                    <h3><i class="fas fa-shopping-cart"></i> Cart <span id="cart-count" class="cart-count">0</span></h3>
+                    <div class="cart-header">
+                        <h3><i class="fas fa-shopping-cart"></i> Cart <span id="cart-count" class="cart-count">0</span></h3>
+                        <button id="clear-cart-btn" class="btn-danger btn-small"><i class="fas fa-trash"></i></button>
+                    </div>
                     <div id="cart-items" class="cart-items">
                         <p class="empty-cart">Cart is empty</p>
                     </div>
@@ -454,8 +477,8 @@
                         <div class="total-row">
                             <span>Discount:</span>
                             <div class="discount-inputs">
-                                <input type="number" id="discount-percent" placeholder="%" min="0" max="100" step="0.01">
-                                <input type="number" id="discount-flat" placeholder="₹" min="0" step="0.01">
+                                <input type="number" id="discount-percent" placeholder="%" min="0" max="100" step="0.01" title="Percentage Discount">
+                                <input type="number" id="discount-flat" placeholder="₹" min="0" step="0.01" title="Flat Discount">
                             </div>
                         </div>
                         <div class="total-row">
@@ -470,34 +493,37 @@
                             <span>Total:</span>
                             <span id="total-amount"><span class="currency-symbol">₹</span>0.00</span>
                         </div>
-
                     </div>
                 </div>
                 <div class="billing-section actions-section">
                     <h3><i class="fas fa-credit-card"></i> Payment & Actions</h3>
-                    <div class="form-row">
-                        <select id="payment-method">
-                            <option value="Cash">Cash</option>
-                            <option value="Card">Card</option>
-                            <option value="UPI">UPI</option>
-                            <option value="Split">Split Payment</option>
-                        </select>
-                        <input type="text" id="reference-no" placeholder="Reference No (Optional)">
-                    </div>
-                    <div id="split-payment-section" style="display:none;">
-                        <h4>Split Payment</h4>
+                    <div class="payment-section">
                         <div class="form-row">
-                            <input type="number" id="cash-amount" placeholder="Cash Amount" min="0" step="0.01">
-                            <input type="number" id="online-amount" placeholder="Online Amount" min="0" step="0.01">
+                            <select id="payment-method">
+                                <option value="Cash">Cash</option>
+                                <option value="Card">Card</option>
+                                <option value="UPI">UPI</option>
+                                <option value="Split">Split Payment</option>
+                            </select>
+                            <input type="text" id="reference-no" placeholder="Reference No (Optional)">
+                        </div>
+                        <div id="split-payment-section" class="split-payment" style="display:none;">
+                            <h4>Split Payment Details</h4>
+                            <div class="form-row">
+        <input type="number" id="cash-amount" placeholder="Cash Amount" min="0" step="0.01" oninput="updateSplitPayment()">
+        <input type="number" id="online-amount" placeholder="Online Amount" min="0" step="0.01" oninput="updateSplitPayment()">
+                            </div>
+                            <div class="split-summary">
+                                <span>Total Paid: <span id="total-paid">₹0.00</span></span>
+                                <span>Balance: <span id="balance-amount">₹0.00</span></span>
+                            </div>
                         </div>
                     </div>
-                     <div class="billing-actions">
-                         <button id="hold-bill-btn" class="btn-secondary"><i class="fas fa-pause"></i> Hold</button>
-                         <button id="retrieve-bill-btn" class="btn-secondary"><i class="fas fa-play"></i> Retrieve</button>
-                         <button id="clear-cart-btn" class="btn-danger"><i class="fas fa-trash"></i> Clear</button>
-                         <button id="reprint-bill-btn" class="btn-info"><i class="fas fa-print"></i> Reprint Bill</button>
-                         <button id="generate-invoice" class="btn-primary"><i class="fas fa-file-invoice"></i> Generate Invoice</button>
-                     </div>
+                    <div class="billing-actions">
+                        <button id="hold-bill-btn" class="btn-secondary"><i class="fas fa-pause"></i> Hold Bill</button>
+                        <button id="retrieve-bill-btn" class="btn-secondary"><i class="fas fa-play"></i> Retrieve Bill</button>
+                        <button id="generate-invoice" class="btn-primary"><i class="fas fa-file-invoice"></i> Generate Invoice</button>
+                    </div>
                 </div>
             </div>
         </section>
