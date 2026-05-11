@@ -15,6 +15,11 @@ let currentPage = 1;
 let itemsPerPage = 6;
 let currentUserRole = 'admin'; // Default for demo
 
+// Offline/Sync related
+let isOnline = navigator.onLine;
+let syncQueue = [];
+let lastSyncTime = null;
+
 // Role definitions
 const roles = {
     admin: {
@@ -457,6 +462,8 @@ function loadUserData(user) {
                 customers = userData.customers || [];
                 employees = userData.employees || [];
                 activityLogs = userData.activityLogs || [];
+                syncQueue = userData.syncQueue || [];
+                lastSyncTime = userData.lastSyncTime || null;
                 currentInvoiceId = sales.length > 0 ? Math.max(...sales.map(s => s.id)) + 1 : 1;
                 categories = userData.categories || ['Groceries', 'Beverages', 'Snacks', 'Household', 'Personal Care', 'Electronics', 'Other'];
                 heldBills = userData.heldBills || [];
@@ -505,6 +512,16 @@ function loadUserData(user) {
             // Load activity logs
             get(ref(window.firebaseDatabase, `users/${user.uid}/activityLogs`)).then(snapshot => {
                 activityLogs = snapshot.exists() ? Object.values(snapshot.val()) : [];
+            }),
+
+            // Load sync queue
+            get(ref(window.firebaseDatabase, `users/${user.uid}/syncQueue`)).then(snapshot => {
+                syncQueue = snapshot.exists() ? Object.values(snapshot.val()) : [];
+            }),
+
+            // Load last sync time
+            get(ref(window.firebaseDatabase, `users/${user.uid}/lastSyncTime`)).then(snapshot => {
+                lastSyncTime = snapshot.exists() ? snapshot.val() : null;
             }),
 
             // Load categories
@@ -576,6 +593,12 @@ function saveUserData(user, dataType, data) {
         });
     } else {
         // Firebase mode
+        if (!isOnline) {
+            // Queue for later sync
+            addToSyncQueue({ type: `save_${dataType}`, data: { dataType, data } });
+            return Promise.resolve();
+        }
+
         const { ref, set } = window.firebaseFunctions;
         const userRef = ref(window.firebaseDatabase, `users/${user.uid}/${dataType}`);
 
@@ -780,6 +803,8 @@ function saveAllToUserDB() {
         saveUserData(currentUser, 'customers', customers),
         saveUserData(currentUser, 'employees', employees),
         saveUserData(currentUser, 'activityLogs', activityLogs),
+        saveUserData(currentUser, 'syncQueue', syncQueue),
+        saveUserData(currentUser, 'lastSyncTime', lastSyncTime),
         saveUserData(currentUser, 'categories', categories),
         saveUserData(currentUser, 'heldBills', heldBills),
         saveUserData(currentUser, 'shopDetails', shopDetails),
@@ -799,6 +824,12 @@ const app = document.getElementById('app');
 const logoutBtn = document.createElement('button'); // Will be added to header
 const sections = document.querySelectorAll('.section');
 const navButtons = document.querySelectorAll('nav button');
+
+// Online/Offline Status
+const statusIndicator = document.createElement('div');
+statusIndicator.id = 'connection-status';
+statusIndicator.className = 'connection-status';
+document.body.appendChild(statusIndicator);
 const productForm = document.getElementById('product-form');
 const inventoryTable = document.getElementById('inventory-body');
 const cartTable = document.getElementById('cart-body');
@@ -904,6 +935,141 @@ function switchRole(role) {
     document.body.className = systemSettings.theme + '-theme';
     // Re-initialize UI based on permissions
     location.reload(); // Simple way to refresh permissions
+}
+
+// Offline/Sync Functions
+function updateConnectionStatus() {
+    isOnline = navigator.onLine;
+    const statusEl = document.getElementById('connection-status');
+
+    if (!statusEl) return;
+
+    if (isOnline) {
+        statusEl.className = 'connection-status online';
+        statusEl.innerHTML = `<i class="fas fa-wifi"></i> Online${syncQueue.length > 0 ? ` (${syncQueue.length} pending)` : ''}`;
+        // Auto-sync when coming online
+        if (syncQueue.length > 0) {
+            setTimeout(() => performSync(), 1000); // Delay to avoid immediate sync
+        }
+    } else {
+        statusEl.className = 'connection-status offline';
+        statusEl.innerHTML = `<i class="fas fa-wifi-slash"></i> Offline${syncQueue.length > 0 ? ` (${syncQueue.length} queued)` : ''}`;
+    }
+}
+
+function addToSyncQueue(operation) {
+    syncQueue.push({
+        ...operation,
+        timestamp: new Date().toISOString(),
+        id: Date.now()
+    });
+
+    if (!isOnline) {
+        logActivity('Queued operation', `Type: ${operation.type}, Offline mode`);
+        showSyncNotification('Operation queued for sync');
+    } else {
+        // Execute immediately and sync
+        executeOperation(operation);
+    }
+
+    updateConnectionStatus(); // Update status to show queue count
+}
+
+function executeOperation(operation) {
+    switch (operation.type) {
+        case 'add_product':
+            products.push(operation.data);
+            break;
+        case 'update_product':
+            const index = products.findIndex(p => p.id === operation.data.id);
+            if (index !== -1) products[index] = operation.data;
+            break;
+        case 'delete_product':
+            products = products.filter(p => p.id !== operation.data.id);
+            break;
+        case 'add_sale':
+            sales.push(operation.data);
+            break;
+        case 'save_products':
+            // Already handled by saveUserData
+            break;
+        case 'save_sales':
+            // Already handled by saveUserData
+            break;
+        // Add more operations as needed
+    }
+    saveAllToUserDB();
+}
+
+async function performSync() {
+    if (!isOnline) {
+        showSyncNotification('Cannot sync - offline', 'error');
+        return;
+    }
+
+    if (syncQueue.length === 0) {
+        showSyncNotification('No pending operations to sync');
+        return;
+    }
+
+    const statusEl = document.getElementById('connection-status');
+    statusEl.className = 'connection-status syncing';
+    statusEl.innerHTML = '<i class="fas fa-sync fa-spin"></i> Syncing...';
+
+    try {
+        // Process sync queue
+        for (const operation of syncQueue) {
+            await executeOperation(operation);
+        }
+
+        syncQueue = [];
+        lastSyncTime = new Date().toISOString();
+        logActivity('Data synced', `Synced ${syncQueue.length} operations`);
+
+        updateConnectionStatus();
+        showSyncNotification('Sync completed successfully');
+    } catch (error) {
+        console.error('Sync failed:', error);
+        updateConnectionStatus();
+        showSyncNotification('Sync failed - will retry later', 'error');
+    }
+}
+
+function showSyncNotification(message, type = 'info') {
+    // Simple notification - can be enhanced with toast library
+    const notification = document.createElement('div');
+    notification.className = `sync-notification ${type}`;
+    notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        top: 60px;
+        right: 10px;
+        background: ${type === 'error' ? '#dc3545' : '#28a745'};
+        color: white;
+        padding: 0.75rem 1rem;
+        border-radius: 4px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        z-index: 1001;
+        font-size: 0.9rem;
+    `;
+
+    document.body.appendChild(notification);
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// Conflict resolution (simple implementation)
+function resolveConflict(localData, serverData) {
+    // For now, use last modified time
+    const localTime = new Date(localData.lastModified || 0);
+    const serverTime = new Date(serverData.lastModified || 0);
+
+    if (localTime > serverTime) {
+        return localData; // Keep local
+    } else {
+        return serverData; // Use server
+    }
 }
 
 function exportProducts() {
@@ -1179,9 +1345,19 @@ productForm.addEventListener('submit', (e) => {
     const stock = parseInt(document.getElementById('stock').value);
     const minStock = parseInt(document.getElementById('min-stock').value) || 0;
 
-    const newProduct = { id: Date.now(), name, barcode, hsn, category, mrp, costPrice, sellingPrice, discountPrice, gstRate, stock, minStock };
+    const newProduct = {
+        id: Date.now(),
+        name, barcode, hsn, category, mrp, costPrice, sellingPrice, discountPrice, gstRate, stock, minStock,
+        lastModified: new Date().toISOString()
+    };
+
+    // Add to sync queue if offline
+    addToSyncQueue({
+        type: 'add_product',
+        data: newProduct
+    });
+
     products.push(newProduct);
-    saveUserData(currentUser, 'products', products).catch(error => console.error('Failed to save products:', error));
     displayProducts(filterCategory.value, filterName.value, sortBy.value, currentPage);
     updateDashboard(); // Refresh dashboard with new product count
     clearProductForm();
@@ -1335,6 +1511,13 @@ paymentMethod.addEventListener('change', () => {
     splitPaymentSection.style.display = paymentMethod.value === 'Split' ? 'block' : 'none';
 });
 
+// Online/Offline event listeners
+window.addEventListener('online', updateConnectionStatus);
+window.addEventListener('offline', updateConnectionStatus);
+
+// Initialize connection status
+updateConnectionStatus();
+
 function updateSplitPayment() {
     const cashAmountEl = document.getElementById('cash-amount');
     const onlineAmountEl = document.getElementById('online-amount');
@@ -1476,8 +1659,13 @@ generateInvoiceBtn.addEventListener('click', () => {
         total
     };
 
+    // Add to sync queue if offline
+    addToSyncQueue({
+        type: 'add_sale',
+        data: invoice
+    });
+
     sales.push(invoice);
-    saveUserData(currentUser, 'sales', sales).catch(error => console.error('Failed to save sales:', error));
     logActivity('Generated invoice', `Invoice ID: ${invoice.id}, Customer: ${invoice.customer}, Total: ₹${invoice.total}`);
 
     // Update inventory
