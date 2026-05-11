@@ -2858,6 +2858,62 @@ footer {
     background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
 }
 
+/* Employees Tab */
+.employee-form {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.employees-list {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.employees-list h4 {
+    margin: 0 0 1rem 0;
+    color: #495057;
+}
+
+#employees-table {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.employee-card {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+}
+
+.employee-info h5 {
+    margin: 0 0 0.25rem 0;
+    color: #343a40;
+}
+
+.employee-info p {
+    margin: 0.1rem 0;
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.employee-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.employee-actions button {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+}
+
 /* Apply Theme Classes */
 body.light-theme,
 body.dark-theme,

@@ -91,12 +91,13 @@
                 <span class="close-modal">&times;</span>
                 <h2>Settings</h2>
 
-                <!-- Settings Tabs -->
-                <div class="settings-tabs">
-                    <button class="tab-btn active" data-tab="account">Account</button>
-                    <button class="tab-btn" data-tab="shop">Shop Details</button>
-                    <button class="tab-btn" data-tab="system">System</button>
-                </div>
+                 <!-- Settings Tabs -->
+                 <div class="settings-tabs">
+                     <button class="tab-btn active" data-tab="account">Account</button>
+                     <button class="tab-btn" data-tab="shop">Shop Details</button>
+                     <button class="tab-btn" data-tab="system">System</button>
+                     <button class="tab-btn" data-tab="employees">Employees</button>
+                 </div>
 
                 <!-- Account Tab -->
                 <div id="account-tab" class="settings-tab active">
@@ -208,11 +209,63 @@
                             <button type="button" id="reset-database" class="btn-danger" style="width: auto;">Reset Database</button>
                             <small style="color: #666; display: block; margin-top: 5px;">Use this if you encounter data issues</small>
                         </div>
-                        <button type="submit" class="btn-primary">Save System Settings</button>
-                    </form>
-                </div>
-            </div>
-        </div>
+                         <button type="submit" class="btn-primary">Save System Settings</button>
+                     </form>
+                 </div>
+
+                 <!-- Employees Tab -->
+                 <div id="employees-tab" class="settings-tab">
+                     <h3>Employee Management</h3>
+                     <div class="employee-form">
+                         <form id="employee-form">
+                             <div class="form-row">
+                                 <div class="form-group">
+                                     <label for="emp-name">Name:</label>
+                                     <input type="text" id="emp-name" required>
+                                 </div>
+                                 <div class="form-group">
+                                     <label for="emp-email">Email:</label>
+                                     <input type="email" id="emp-email" required>
+                                 </div>
+                             </div>
+                             <div class="form-row">
+                                 <div class="form-group">
+                                     <label for="emp-phone">Phone:</label>
+                                     <input type="tel" id="emp-phone">
+                                 </div>
+                                 <div class="form-group">
+                                     <label for="emp-role">Role:</label>
+                                     <select id="emp-role" required>
+                                         <option value="cashier">Cashier</option>
+                                         <option value="inventory-staff">Inventory Staff</option>
+                                         <option value="manager">Manager</option>
+                                     </select>
+                                 </div>
+                             </div>
+                             <div class="form-row">
+                                 <div class="form-group">
+                                     <label for="emp-salary">Salary (Monthly):</label>
+                                     <input type="number" id="emp-salary" min="0" step="0.01">
+                                 </div>
+                                 <div class="form-group">
+                                     <label for="emp-status">Status:</label>
+                                     <select id="emp-status">
+                                         <option value="active">Active</option>
+                                         <option value="inactive">Inactive</option>
+                                     </select>
+                                 </div>
+                             </div>
+                             <button type="submit" class="btn-primary">Add Employee</button>
+                             <button type="button" id="clear-emp-form" class="btn-secondary">Clear</button>
+                         </form>
+                     </div>
+                     <div class="employees-list">
+                         <h4>Current Employees</h4>
+                         <div id="employees-table"></div>
+                     </div>
+                 </div>
+             </div>
+         </div>
 
         <!-- Dashboard Section -->
         <section id="dashboard" class="section active">
@@ -484,8 +537,14 @@
             <div class="billing-header">
                 <h2><i class="fas fa-cash-register"></i> Billing</h2>
                 <div class="billing-controls">
-        <button id="scan-barcode-btn" class="btn-secondary" title="Scan Barcode" onclick="scanBarcode()"><i class="fas fa-barcode"></i></button>
-        <button id="quick-keys-btn" class="btn-secondary" title="Quick Keys" onclick="showQuickKeys()"><i class="fas fa-keyboard"></i></button>
+                    <button id="scan-barcode-btn" class="btn-secondary" title="Scan Barcode" onclick="scanBarcode()"><i class="fas fa-barcode"></i></button>
+                    <button id="quick-keys-btn" class="btn-secondary" title="Quick Keys" onclick="showQuickKeys()"><i class="fas fa-keyboard"></i></button>
+                    <select id="role-switcher" onchange="switchRole(this.value)" style="margin-left: 1rem;">
+                        <option value="admin">Admin</option>
+                        <option value="manager">Manager</option>
+                        <option value="cashier">Cashier</option>
+                        <option value="inventory-staff">Inventory Staff</option>
+                    </select>
                 </div>
             </div>
             <div class="billing-container">

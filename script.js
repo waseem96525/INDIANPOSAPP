@@ -5,12 +5,217 @@ let currentUser = null;
 let products = [];
 let sales = [];
 let customers = [];
+let employees = [];
 let categories = ['Groceries', 'Beverages', 'Snacks', 'Household', 'Personal Care', 'Electronics', 'Other'];
 let cart = [];
 let heldBills = [];
+let activityLogs = [];
 let currentInvoiceId = 1;
 let currentPage = 1;
 let itemsPerPage = 6;
+let currentUserRole = 'admin'; // Default for demo
+
+// Role definitions
+const roles = {
+    admin: {
+        name: 'Administrator',
+        permissions: {
+            dashboard: true,
+            inventory: true,
+            billing: true,
+            reports: true,
+            settings: true,
+            employees: true,
+            canEditPrices: true,
+            canDeleteProducts: true,
+            canViewAllReports: true,
+            canManageEmployees: true
+        }
+    },
+    manager: {
+        name: 'Manager',
+        permissions: {
+            dashboard: true,
+            inventory: true,
+            billing: true,
+            reports: true,
+            settings: false,
+            employees: false,
+            canEditPrices: true,
+            canDeleteProducts: true,
+            canViewAllReports: true,
+            canManageEmployees: false
+        }
+    },
+    cashier: {
+        name: 'Cashier',
+        permissions: {
+            dashboard: true,
+            inventory: false, // Can view but not edit
+            billing: true,
+            reports: false,
+            settings: false,
+            employees: false,
+            canEditPrices: false,
+            canDeleteProducts: false,
+            canViewAllReports: false,
+            canManageEmployees: false
+        }
+    },
+    'inventory-staff': {
+        name: 'Inventory Staff',
+        permissions: {
+            dashboard: false,
+            inventory: true,
+            billing: false,
+            reports: false,
+            settings: false,
+            employees: false,
+            canEditPrices: false,
+            canDeleteProducts: false,
+            canViewAllReports: false,
+            canManageEmployees: false
+        }
+    }
+};
+
+// Permission checking function
+function hasPermission(permission) {
+    return roles[currentUserRole]?.permissions[permission] || false;
+}
+
+// Log activity
+function logActivity(action, details = '') {
+    const log = {
+        id: Date.now(),
+        user: currentUser?.displayName || currentUser?.email || 'Unknown',
+        role: currentUserRole,
+        action,
+        details,
+        timestamp: new Date().toISOString()
+    };
+    activityLogs.push(log);
+    // Keep only last 1000 logs
+    if (activityLogs.length > 1000) {
+        activityLogs = activityLogs.slice(-1000);
+    }
+    saveUserData(currentUser, 'activityLogs', activityLogs);
+}
+
+// Employee Management
+function addEmployee(event) {
+    event.preventDefault();
+    const name = document.getElementById('emp-name').value.trim();
+    const email = document.getElementById('emp-email').value.trim();
+    const phone = document.getElementById('emp-phone').value.trim();
+    const role = document.getElementById('emp-role').value;
+    const salary = parseFloat(document.getElementById('emp-salary').value) || 0;
+    const status = document.getElementById('emp-status').value;
+
+    if (!name || !email) {
+        alert('Name and email are required');
+        return;
+    }
+
+    const employee = {
+        id: Date.now(),
+        name,
+        email,
+        phone,
+        role,
+        salary,
+        status,
+        joinDate: new Date().toISOString(),
+        lastLogin: null
+    };
+
+    employees.push(employee);
+    saveUserData(currentUser, 'employees', employees);
+    displayEmployees();
+    document.getElementById('employee-form').reset();
+    logActivity('Added employee', `Employee: ${name}, Role: ${role}`);
+}
+
+function displayEmployees() {
+    const container = document.getElementById('employees-table');
+    container.innerHTML = '';
+
+    if (employees.length === 0) {
+        container.innerHTML = '<p>No employees added yet.</p>';
+        return;
+    }
+
+    employees.forEach(emp => {
+        const card = document.createElement('div');
+        card.className = 'employee-card';
+        card.innerHTML = `
+            <div class="employee-info">
+                <h5>${emp.name}</h5>
+                <p><strong>Email:</strong> ${emp.email}</p>
+                <p><strong>Phone:</strong> ${emp.phone || 'N/A'}</p>
+                <p><strong>Role:</strong> ${roles[emp.role]?.name || emp.role}</p>
+                <p><strong>Salary:</strong> ₹${emp.salary.toFixed(2)}</p>
+                <p><strong>Status:</strong> ${emp.status}</p>
+            </div>
+            <div class="employee-actions">
+                <button onclick="editEmployee(${emp.id})" class="btn-secondary">Edit</button>
+                <button onclick="deleteEmployee(${emp.id})" class="btn-danger">Delete</button>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function editEmployee(id) {
+    const emp = employees.find(e => e.id === id);
+    if (!emp) return;
+
+    document.getElementById('emp-name').value = emp.name;
+    document.getElementById('emp-email').value = emp.email;
+    document.getElementById('emp-phone').value = emp.phone;
+    document.getElementById('emp-role').value = emp.role;
+    document.getElementById('emp-salary').value = emp.salary;
+    document.getElementById('emp-status').value = emp.status;
+
+    // Remove and will be re-added on submit
+    employees = employees.filter(e => e.id !== id);
+}
+
+function deleteEmployee(id) {
+    if (confirm('Are you sure you want to delete this employee?')) {
+        employees = employees.filter(e => e.id !== id);
+        saveUserData(currentUser, 'employees', employees);
+        displayEmployees();
+        logActivity('Deleted employee', `Employee ID: ${id}`);
+    }
+}
+
+// Time tracking (simplified)
+let currentSession = null;
+
+function clockIn() {
+    if (currentSession) {
+        alert('Already clocked in');
+        return;
+    }
+    currentSession = {
+        employeeId: currentUser?.uid || 'demo',
+        startTime: new Date().toISOString(),
+        endTime: null
+    };
+    logActivity('Clocked in');
+}
+
+function clockOut() {
+    if (!currentSession) {
+        alert('Not clocked in');
+        return;
+    }
+    currentSession.endTime = new Date().toISOString();
+    // Save to attendance records (can be extended)
+    logActivity('Clocked out', `Session: ${currentSession.startTime} to ${currentSession.endTime}`);
+    currentSession = null;
+}
 
 // Shop Details (per user)
 let shopDetails = {};
@@ -250,6 +455,8 @@ function loadUserData(user) {
                 products = userData.products || [];
                 sales = userData.sales || [];
                 customers = userData.customers || [];
+                employees = userData.employees || [];
+                activityLogs = userData.activityLogs || [];
                 currentInvoiceId = sales.length > 0 ? Math.max(...sales.map(s => s.id)) + 1 : 1;
                 categories = userData.categories || ['Groceries', 'Beverages', 'Snacks', 'Household', 'Personal Care', 'Electronics', 'Other'];
                 heldBills = userData.heldBills || [];
@@ -288,6 +495,16 @@ function loadUserData(user) {
             // Load customers
             get(ref(window.firebaseDatabase, `users/${user.uid}/customers`)).then(snapshot => {
                 customers = snapshot.exists() ? Object.values(snapshot.val()) : [];
+            }),
+
+            // Load employees
+            get(ref(window.firebaseDatabase, `users/${user.uid}/employees`)).then(snapshot => {
+                employees = snapshot.exists() ? Object.values(snapshot.val()) : [];
+            }),
+
+            // Load activity logs
+            get(ref(window.firebaseDatabase, `users/${user.uid}/activityLogs`)).then(snapshot => {
+                activityLogs = snapshot.exists() ? Object.values(snapshot.val()) : [];
             }),
 
             // Load categories
@@ -561,6 +778,8 @@ function saveAllToUserDB() {
         saveUserData(currentUser, 'products', products),
         saveUserData(currentUser, 'sales', sales),
         saveUserData(currentUser, 'customers', customers),
+        saveUserData(currentUser, 'employees', employees),
+        saveUserData(currentUser, 'activityLogs', activityLogs),
         saveUserData(currentUser, 'categories', categories),
         saveUserData(currentUser, 'heldBills', heldBills),
         saveUserData(currentUser, 'shopDetails', shopDetails),
@@ -633,19 +852,23 @@ const productCountEl = document.getElementById('product-count');
 
 // Navigation
 navButtons.forEach(button => {
-    button.addEventListener('click', () => {
-        const sectionId = button.id.replace('nav-', '');
-        if (sectionId === 'settings') {
-            showSettingsModal();
-        } else {
-            showSection(sectionId);
-            if (sectionId === 'dashboard') {
-                updateDashboard();
-            } else if (sectionId === 'reports') {
-                displayReports();
+    const sectionId = button.id.replace('nav-', '');
+    if (hasPermission(sectionId)) {
+        button.addEventListener('click', () => {
+            if (sectionId === 'settings') {
+                showSettingsModal();
+            } else {
+                showSection(sectionId);
+                if (sectionId === 'dashboard') {
+                    updateDashboard();
+                } else if (sectionId === 'reports') {
+                    displayReports();
+                }
             }
-        }
-    });
+        });
+    } else {
+        button.style.display = 'none';
+    }
 });
 
 function showSection(sectionId) {
@@ -655,6 +878,7 @@ function showSection(sectionId) {
     document.getElementById(sectionId).classList.add('active');
     if (sectionId === 'billing') {
         updateQuickProducts();
+        document.getElementById('role-switcher').value = currentUserRole;
     }
 }
 
@@ -673,6 +897,13 @@ function scanBarcode() {
 
 function showQuickKeys() {
     alert('Quick keys: Press number keys to add quantities, F1 for discount, etc.');
+}
+
+function switchRole(role) {
+    currentUserRole = role;
+    document.body.className = systemSettings.theme + '-theme';
+    // Re-initialize UI based on permissions
+    location.reload(); // Simple way to refresh permissions
 }
 
 function exportProducts() {
@@ -954,6 +1185,7 @@ productForm.addEventListener('submit', (e) => {
     displayProducts(filterCategory.value, filterName.value, sortBy.value, currentPage);
     updateDashboard(); // Refresh dashboard with new product count
     clearProductForm();
+    logActivity('Added product', `Product: ${name}, Stock: ${stock}`);
 });
 
 function editProduct(index) {
@@ -980,9 +1212,11 @@ function editProduct(index) {
 
 function deleteProduct(index) {
     if (confirm('Are you sure you want to delete this product?')) {
+        const product = products[index];
         products.splice(index, 1);
         saveUserData(currentUser, 'products', products).catch(error => console.error('Failed to save products:', error));
         displayProducts(filterCategory.value, filterName.value, sortBy.value, currentPage);
+        logActivity('Deleted product', `Product: ${product.name}`);
     }
 }
 
@@ -1172,6 +1406,12 @@ if (exportProductsBtn) exportProductsBtn.addEventListener('click', exportProduct
 if (importProductsBtn) importProductsBtn.addEventListener('click', () => importFile.click());
 if (importFile) importFile.addEventListener('change', importProducts);
 if (clearFormBtn) clearFormBtn.addEventListener('click', clearProductForm);
+
+// Employee management
+document.getElementById('employee-form').addEventListener('submit', addEmployee);
+document.getElementById('clear-emp-form').addEventListener('click', () => {
+    document.getElementById('employee-form').reset();
+});
 if (bulkEditBtn) bulkEditBtn.addEventListener('change', toggleBulkActions);
 if (bulkStockBtn) bulkStockBtn.addEventListener('change', toggleBulkActions);
 
@@ -1238,6 +1478,7 @@ generateInvoiceBtn.addEventListener('click', () => {
 
     sales.push(invoice);
     saveUserData(currentUser, 'sales', sales).catch(error => console.error('Failed to save sales:', error));
+    logActivity('Generated invoice', `Invoice ID: ${invoice.id}, Customer: ${invoice.customer}, Total: ₹${invoice.total}`);
 
     // Update inventory
     cart.forEach(item => {
@@ -2311,6 +2552,11 @@ function switchSettingsTab(tabName) {
         tab.classList.remove('active');
     });
     document.getElementById(`${tabName}-tab`).classList.add('active');
+
+    // Load tab-specific data
+    if (tabName === 'employees') {
+        displayEmployees();
+    }
 }
 
 function populateSettingsForms() {
@@ -2334,6 +2580,11 @@ function populateSettingsForms() {
 // Settings Modal
 function showSettingsModal() {
     populateSettingsForms();
+    // Hide employees tab if not admin
+    const employeesTab = document.querySelector('[data-tab="employees"]');
+    if (employeesTab) {
+        employeesTab.style.display = hasPermission('employees') ? 'inline-block' : 'none';
+    }
     document.getElementById('settings-modal').style.display = 'block';
 }
 
