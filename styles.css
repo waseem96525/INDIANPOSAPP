@@ -842,9 +842,14 @@ td button.edit:hover {
     transform: translateY(-2px);
 }
 
-.btn-danger {
-    background: linear-gradient(135deg, #dc3545, #c82333);
+.btn-info {
+    background: linear-gradient(135deg, #17a2b8, #138496);
     color: white;
+}
+
+.btn-info:hover {
+    background: linear-gradient(135deg, #138496, #117a8b);
+    transform: translateY(-2px);
 }
 
 .btn-danger:hover {
@@ -1150,6 +1155,24 @@ td button.edit:hover {
 .activity-item .activity-amount {
     font-weight: bold;
     color: #28a745;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.print-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 0.2rem 0.4rem;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: background 0.2s;
+}
+
+.print-btn:hover {
+    background: #0056b3;
 }
 
 .quick-actions {
@@ -1742,48 +1765,195 @@ td button.edit:hover {
     margin-bottom: 20px;
 }
 
-/* Print Styles */
+/* Enhanced Print Styles for Receipt */
 @media print {
+    @page {
+        size: A4;
+        margin: 0.25in;
+    }
+
     body * {
         visibility: hidden;
     }
+
     #invoice-template, #invoice-template * {
         visibility: visible;
     }
+
     #invoice-template {
         position: absolute;
         left: 0;
         top: 0;
         width: 100%;
-        font-size: 12px;
+        font-family: 'Courier New', monospace;
+        font-size: 16px;
+        font-weight: bolder;
+        line-height: 1.5;
+        color: #000;
     }
+
     #invoice-content {
-        margin: 20px;
-        font-family: Arial, sans-serif;
+        max-width: 450px;
+        margin: 0 auto;
+        padding: 10px;
+        border: 2px solid #000;
+        background: #fff;
+        font-weight: bolder;
     }
-    #invoice-content h1 {
+
+    #invoice-header {
         text-align: center;
-        margin-bottom: 20px;
+        margin-bottom: 10px;
+        padding-bottom: 6px;
+        border-bottom: 2px solid #000;
     }
-    .invoice-totals {
-        text-align: right;
-        margin-top: 20px;
+
+    #shop-info h1 {
+        font-size: 24px;
+        font-weight: bolder;
+        margin: 0 0 4px 0;
     }
-    .invoice-totals hr {
-        border: 1px solid #000;
+
+    #shop-info p {
+        margin: 2px 0;
+        font-size: 14px;
+        font-weight: bolder;
     }
+
+    #invoice-logo img {
+        max-width: 80px;
+        max-height: 60px;
+        object-fit: contain;
+    }
+
+    #invoice-content h2 {
+        font-size: 20px;
+        font-weight: bolder;
+        text-align: center;
+        margin: 10px 0;
+        text-decoration: underline;
+    }
+
+    .invoice-details {
+        display: flex;
+        justify-content: space-between;
+        margin: 8px 0;
+        padding: 6px;
+        background: #f9f9f9;
+        border: 1px solid #ccc;
+        font-weight: bolder;
+    }
+
+    .invoice-details p {
+        margin: 2px 0;
+        font-size: 14px;
+    }
+
     table {
         width: 100%;
         border-collapse: collapse;
-        margin: 20px 0;
+        margin: 10px 0;
+        font-size: 14px;
+        font-weight: bolder;
     }
+
     th, td {
-        border: 1px solid #000;
+        border: 2px solid #000;
+        padding: 4px;
+        text-align: left;
+        font-weight: bolder;
+    }
+
+    th {
+        background-color: #d0d0d0;
+        text-align: center;
+        font-size: 15px;
+    }
+
+    td {
+        text-align: center;
+    }
+
+    td:nth-child(1) {
+        text-align: left;
+    }
+
+    .invoice-totals {
+        text-align: right;
+        margin-top: 8px;
+        padding-top: 5px;
+        border-top: 2px solid #000;
+        font-weight: bolder;
+    }
+
+    .invoice-totals p {
+        margin: 3px 0;
+        font-size: 15px;
+        font-weight: bolder;
+    }
+
+    .invoice-totals p:last-child {
+        font-weight: bolder;
+        font-size: 17px;
+        margin-top: 5px;
+    }
+
+    th, td {
+        border: 2px solid #000;
         padding: 8px;
         text-align: left;
     }
+
     th {
-        background-color: #f0f0f0;
+        background-color: #d0d0d0;
+        font-weight: bolder;
+        text-align: center;
+        font-size: 14px;
+    }
+
+    td {
+        text-align: center;
+    }
+
+    td:nth-child(1) {
+        text-align: left;
+    }
+
+    .invoice-totals {
+        text-align: right;
+        margin-top: 15px;
+        padding-top: 10px;
+        border-top: 1px solid #000;
+    }
+
+    .invoice-totals p {
+        margin: 6px 0;
+        font-size: 14px;
+        font-weight: bold;
+    }
+
+    .invoice-totals p:last-child {
+        font-weight: bolder;
+        font-size: 16px;
+        margin-top: 12px;
+    }
+
+    .invoice-totals hr {
+        border: 1px solid #000;
+        margin: 10px 0;
+    }
+
+    .invoice-totals p:last-child {
+        font-weight: bold;
+        font-size: 14px;
+        margin-top: 10px;
+    }
+
+    /* No footer for simplicity */
+
+    /* Hide elements not needed in print */
+    .no-print {
+        display: none !important;
     }
 }
 
@@ -1960,6 +2130,17 @@ td button.edit:hover {
 
     .activity-item {
         padding: 0.5rem;
+    }
+
+    .activity-item .activity-amount {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.25rem;
+    }
+
+    .print-btn {
+        padding: 0.15rem 0.3rem;
+        font-size: 0.7rem;
     }
 
     .quick-actions {

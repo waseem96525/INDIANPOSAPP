@@ -491,12 +491,13 @@
                             <input type="number" id="online-amount" placeholder="Online Amount" min="0" step="0.01">
                         </div>
                     </div>
-                    <div class="billing-actions">
-                        <button id="hold-bill-btn" class="btn-secondary"><i class="fas fa-pause"></i> Hold</button>
-                        <button id="retrieve-bill-btn" class="btn-secondary"><i class="fas fa-play"></i> Retrieve</button>
-                        <button id="clear-cart-btn" class="btn-danger"><i class="fas fa-trash"></i> Clear</button>
-                        <button id="generate-invoice" class="btn-primary"><i class="fas fa-file-invoice"></i> Generate Invoice</button>
-                    </div>
+                     <div class="billing-actions">
+                         <button id="hold-bill-btn" class="btn-secondary"><i class="fas fa-pause"></i> Hold</button>
+                         <button id="retrieve-bill-btn" class="btn-secondary"><i class="fas fa-play"></i> Retrieve</button>
+                         <button id="clear-cart-btn" class="btn-danger"><i class="fas fa-trash"></i> Clear</button>
+                         <button id="reprint-bill-btn" class="btn-info"><i class="fas fa-print"></i> Reprint Bill</button>
+                         <button id="generate-invoice" class="btn-primary"><i class="fas fa-file-invoice"></i> Generate Invoice</button>
+                     </div>
                 </div>
             </div>
         </section>
@@ -728,26 +729,19 @@
                 <div id="shop-info">
                     <h1 id="invoice-shop-name">Shop Name</h1>
                     <p id="invoice-shop-address"></p>
-                    <p id="invoice-shop-phone"></p>
-                    <p id="invoice-shop-email"></p>
-                    <p id="invoice-shop-gst"></p>
                 </div>
-                <div id="invoice-logo"></div>
             </div>
             <h2>Invoice</h2>
             <div class="invoice-details">
                 <p>Invoice #: <span id="invoice-id"></span></p>
                 <p>Date: <span id="invoice-date"></span></p>
                 <p>Customer: <span id="invoice-customer"></span></p>
-                <p>Phone: <span id="invoice-phone"></span></p>
             </div>
             <table>
                 <thead>
                     <tr>
                         <th>Product</th>
                         <th>Qty</th>
-                        <th>Rate</th>
-                        <th>GST</th>
                         <th>Total</th>
                     </tr>
                 </thead>
@@ -756,12 +750,9 @@
             </table>
             <div class="invoice-totals">
                 <p>Subtotal: <span class="currency-symbol">₹</span><span id="invoice-subtotal"></span></p>
-                <p>Discount: <span id="invoice-discount"></span></p>
                 <p>GST: <span class="currency-symbol">₹</span><span id="invoice-gst"></span></p>
-                <p>Round Off: <span class="currency-symbol">₹</span><span id="invoice-roundoff">0.00</span></p>
-                <hr>
-                <p><strong>Total: <span class="currency-symbol">₹</span><span id="invoice-total"></span></strong></p>
-                <p>Payment Method: <span id="invoice-payment"></span></p>
+                <p>Total: <span class="currency-symbol">₹</span><span id="invoice-total"></span></p>
+                <p>Payment: <span id="invoice-payment"></span></p>
             </div>
         </div>
     </div>

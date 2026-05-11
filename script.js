@@ -612,6 +612,7 @@ const pageInfo = document.getElementById('page-info');
 const selectAllCheckbox = document.getElementById('select-all');
 const bulkDeleteBtn = document.getElementById('bulk-delete');
 const exportCsvBtn = document.getElementById('export-csv');
+const reprintBillBtn = document.getElementById('reprint-bill-btn');
 
 
 
@@ -992,6 +993,24 @@ clearCartBtn.addEventListener('click', () => {
     }
 });
 
+reprintBillBtn.addEventListener('click', () => {
+    if (sales.length === 0) {
+        alert('No bills available to reprint');
+        return;
+    }
+    const billList = sales.slice(-20).map((s, i) => `${sales.length - 20 + i + 1}. Inv #${s.id} - ${s.customer} - ${systemSettings.currency}${s.total.toFixed(2)} (${s.date})`).join('\n');
+    const choice = prompt(`Select bill to reprint (last 20):\n${billList}`);
+    if (choice) {
+        const index = parseInt(choice) - 1;
+        const billIndex = sales.length - 20 + index;
+        if (billIndex >= 0 && billIndex < sales.length) {
+            reprintBill(sales[billIndex]);
+        } else {
+            alert('Invalid selection');
+        }
+    }
+});
+
 function updateQty(index, qty) {
     cart[index].qty = parseInt(qty);
     displayCart();
@@ -1051,17 +1070,12 @@ generateInvoiceBtn.addEventListener('click', () => {
     // Shop details
     document.getElementById('invoice-shop-name').textContent = shopDetails.name || 'Shop Name';
     document.getElementById('invoice-shop-address').textContent = shopDetails.address || '';
-    document.getElementById('invoice-shop-phone').textContent = shopDetails.phone ? `Phone: ${shopDetails.phone}` : '';
-    document.getElementById('invoice-shop-email').textContent = shopDetails.email ? `Email: ${shopDetails.email}` : '';
-    document.getElementById('invoice-shop-gst').textContent = shopDetails.gst ? `GST: ${shopDetails.gst}` : '';
 
     // Invoice details
     document.getElementById('invoice-id').textContent = invoice.id;
     document.getElementById('invoice-date').textContent = invoice.date + ' ' + invoice.time;
     document.getElementById('invoice-customer').textContent = invoice.customer;
-    document.getElementById('invoice-phone').textContent = invoice.phone;
     document.getElementById('invoice-subtotal').textContent = systemSettings.currency + invoice.subtotal.toFixed(2);
-    document.getElementById('invoice-discount').textContent = `${invoice.discountPercent}% + ${systemSettings.currency}${invoice.discountFlat.toFixed(2)}`;
     document.getElementById('invoice-gst').textContent = systemSettings.currency + invoice.gst.toFixed(2);
     document.getElementById('invoice-payment').textContent = invoice.payment + (invoice.reference ? ` (${invoice.reference})` : '');
     document.getElementById('invoice-total').textContent = systemSettings.currency + invoice.total.toFixed(2);
@@ -1076,8 +1090,6 @@ generateInvoiceBtn.addEventListener('click', () => {
         row.innerHTML = `
             <td>${item.product.name}</td>
             <td>${item.qty}</td>
-            <td>${price.toFixed(2)}</td>
-            <td>${gstAmount.toFixed(2)}</td>
             <td>${itemTotal.toFixed(2)}</td>
         `;
         invoiceItems.appendChild(row);
@@ -1098,6 +1110,51 @@ generateInvoiceBtn.addEventListener('click', () => {
     discountPercent.value = '';
     discountFlat.value = '';
 });
+
+function reprintBill(invoice) {
+    // Populate invoice template with the selected bill data
+    // Shop details
+    document.getElementById('invoice-shop-name').textContent = shopDetails.name || 'Shop Name';
+    document.getElementById('invoice-shop-address').textContent = shopDetails.address || '';
+
+    // Invoice details
+    document.getElementById('invoice-id').textContent = invoice.id;
+    document.getElementById('invoice-date').textContent = (invoice.date || '') + ' ' + (invoice.time || '');
+    document.getElementById('invoice-customer').textContent = invoice.customer;
+    document.getElementById('invoice-subtotal').textContent = systemSettings.currency + invoice.subtotal.toFixed(2);
+    document.getElementById('invoice-gst').textContent = systemSettings.currency + invoice.gst.toFixed(2);
+    document.getElementById('invoice-payment').textContent = invoice.payment + (invoice.reference ? ` (${invoice.reference})` : '');
+    document.getElementById('invoice-total').textContent = systemSettings.currency + invoice.total.toFixed(2);
+
+    const invoiceItems = document.getElementById('invoice-items');
+    invoiceItems.innerHTML = '';
+    invoice.items.forEach(item => {
+        const price = item.product.sellingPrice || item.product.price || 0;
+        const gstAmount = (price * item.qty * item.product.gstRate) / 100;
+        const itemTotal = (price * item.qty) + gstAmount;
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${item.product.name}</td>
+            <td>${item.qty}</td>
+            <td>${itemTotal.toFixed(2)}</td>
+        `;
+        invoiceItems.appendChild(row);
+    });
+
+    const invoiceTemplate = document.getElementById('invoice-template');
+    invoiceTemplate.style.display = 'block';
+    window.print();
+    invoiceTemplate.style.display = 'none';
+}
+
+function reprintBillById(id) {
+    const invoice = sales.find(s => s.id === id);
+    if (invoice) {
+        reprintBill(invoice);
+    } else {
+        alert('Bill not found');
+    }
+}
 
 // Reports
 let salesChart = null;
@@ -1693,9 +1750,12 @@ function updateRecentActivity() {
         const saleDiv = document.createElement('div');
         saleDiv.className = 'activity-item';
         saleDiv.innerHTML = `
-            <div class="activity-title">Invoice #${sale.id}</div>
-            <div class="activity-details">${sale.customer} • ${sale.date}</div>
-            <div class="activity-amount">${systemSettings.currency}${sale.total.toFixed(2)}</div>
+            <div class="activity-title">Invoice #${sale.id} - ${sale.customer}</div>
+            <div class="activity-details">${sale.date} • ${sale.items.length} items</div>
+            <div class="activity-amount">
+                <span>${systemSettings.currency}${sale.total.toFixed(2)}</span>
+                <button onclick="reprintBillById(${sale.id})" class="print-btn" title="Print Receipt"><i class="fas fa-print"></i></button>
+            </div>
         `;
         recentSalesList.appendChild(saleDiv);
     });
