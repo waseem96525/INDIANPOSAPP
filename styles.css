@@ -51,20 +51,20 @@ body {
 }
 
 .form-group {
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
     text-align: left;
 }
 
 .form-group label {
     display: block;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
     font-weight: bold;
     color: #555;
 }
 
-.form-group input {
+.form-group input, .form-group textarea {
     width: 100%;
-    padding: 0.75rem;
+    padding: 0.5rem;
     border: 2px solid #ddd;
     border-radius: 5px;
     font-size: 1rem;
@@ -1803,19 +1803,21 @@ td button.edit:hover {
 
     #invoice-header {
         text-align: center;
-        margin-bottom: 10px;
-        padding-bottom: 6px;
+        margin-bottom: 8px;
+        padding: 4px 0 4px 0;
         border-bottom: 2px solid #000;
     }
 
     #shop-info h1 {
         font-size: 24px;
         font-weight: bolder;
-        margin: 0 0 4px 0;
+        margin: 0 0 2px 0;
+        padding: 2px 0;
     }
 
     #shop-info p {
-        margin: 2px 0;
+        margin: 1px 0;
+        padding: 1px 0;
         font-size: 14px;
         font-weight: bolder;
     }
