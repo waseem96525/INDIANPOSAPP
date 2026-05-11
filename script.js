@@ -2189,7 +2189,7 @@ function applySystemSettings() {
     });
 
     // Apply theme
-    document.body.className = systemSettings.theme === 'dark' ? 'dark-theme' : '';
+    document.body.className = systemSettings.theme + '-theme';
 
     // Apply items per page
     itemsPerPage = systemSettings.itemsPerPage;
